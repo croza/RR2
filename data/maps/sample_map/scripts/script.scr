@@ -1,0 +1,8 @@
+
+update [
+if countUnit(rockraider) == 0 and countUnit(toolstore) == 0
+[ levelfail() ]
+
+if ENERGY_CRYSTALS > 1
+[ levelwin() ]
+]
