@@ -47,11 +47,11 @@ class CameraHandler(DirectObject.DirectObject):
       self.camDist = 20 
       # A variable that will determine how far the camera is from it's target focus 
        
-      self.panRateDivisor = 20 
+      self.panRateDivisor = 100. 
       # This variable is used as a divisor when calculating how far to move the camera when panning. Higher numbers will yield slower panning 
       # and lower numbers will yield faster panning. This must not be set to 0. 
        
-      self.panZoneSize = .4
+      self.panZoneSize = .2
       # This variable controls how close the mouse cursor needs to be to the edge of the screen to start panning the camera. It must be less than 1, 
       # and I recommend keeping it less than .2 
        
