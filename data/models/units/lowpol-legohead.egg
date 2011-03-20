@@ -21,7 +21,7 @@
   <Scalar> shininess {12.5}
 }
 <Texture> Face_00_Tex {
-  "./textures/tex.png"
+  "./textures/legoman-face.png"
   <Scalar> saved-result { 1 }
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR_MIPMAP_LINEAR }
