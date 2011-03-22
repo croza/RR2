@@ -1,17 +1,15 @@
 import os, sys, math, random
 
-from pandac.PandaModules import *
-from direct.showbase.DirectObject import DirectObject
-from direct.task import *
-from direct.actor.Actor import Actor
-from panda3d.ai import *
-from direct.gui.OnscreenText import OnscreenText
-
-
 import random
 import mapLib
 import config
 import wallTypes
+
+from direct.showbase.DirectObject import DirectObject
+from pandac.PandaModules import AmbientLight
+from pandac.PandaModules import VBase4
+import direct.directbase.DirectStart
+
 
 class world(DirectObject):
 	def __init__(self, filename):
@@ -28,6 +26,9 @@ class world(DirectObject):
 			tile.model.setPos(tile.x*4, tile.y*4, 0)
 			tile.model.reparentTo(render)
 			self.tiles.append(tile)
+		legohead = loader.loadModel("data/models/units/lowpol-legohead")
+		legohead.setPos(0, 0, 1)
+		legohead.reparentTo(render)
 		
 	def loadLight(self): #Sets the lights
 		plight = AmbientLight('my plight')

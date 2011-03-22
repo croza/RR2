@@ -1,0 +1,43 @@
+[ RR2 Documentation: Map format ]
+
+So, basically, maps are zip files. Simple enough.
+
+File structure:
+-[root]
+-- map.cfg
+-- maps
+--- wall.map
+--- resource.map
+-- scripts
+--- [Script files here]
+
+<map.cfg>
+This is a config file that contains basic information about the level. It follows the python ConfigParser format (see config.txt).
+Options:
+- name: Full name of the map
+- briefing: Briefing given to the player before they start the level (optional, recommended for levels that form part of a storyline)
+- desc: Short description of the level (optional, shown to the player in the level selector)
+- old_format: Whether the map files follow the old format (recommended values: yes or no). Set to yes to be able to use map files from the original game, or created with Cyrem's Level Editor. Rename Surf.map to wall.map and Cror.map to resource.map. None of the other map parts are supported yet.
+- script: Which level script to load. This is still completely non-final.
+- width, height: width and height of the level, in tiles. Make sure to get this right, or strange results may ensue!
+
+*** End of end-user/map-maker documentation, people who don't intend to program tools are not likely to find anything useful after this ***
+
+<wall.map>
+Binary file. One word (4 bytes) per tile. No header, unless you have an original map file (which are not documented here, but relatively similar, just that they have a header).
+Default tile values (may change according to configuration):
+00 00 - Ground
+00 01 - Solid Rock
+00 02 - Hard Rock
+00 03 - Loose Rock
+04 00 - Dirt
+06 00 - Lava
+08 00 - Ore Seam
+09 00 - Water
+0A 00 - Energy Crystal Seam
+0B 00 - Recharge Seam
+
+<resource.map>
+Binary file. One word (4 bytes) per tile. No header, unless it's an original map file (not documented here).
+Up to 255 pieces of ore and 255 energy crystals can be on any one tile. The format is very simple - one byte per resource, ore then crystals.
+So 01 00 would be one ore and one crystal. 08 0A would be 8 pieces of ore and 10 crystals.
