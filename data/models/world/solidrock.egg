@@ -11,8 +11,8 @@
   <Scalar> specb {0.25}
   <Scalar> shininess {12.5}
 }
-<Texture> Solid_Rock_Tex {
-  "./textures/solidrock.png"
+<Texture> SOLIDROCK.001 {
+  "./textures2/solidrock2.bmp"
   <Scalar> saved-result { 1 }
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
@@ -223,42 +223,42 @@
     }
   }
   <Polygon> {
-    <TRef> { Solid_Rock_Tex }
+    <TRef> { SOLIDROCK.001 }
     <MRef> { Material }
     <Normal> { 0.000000 0.000000 -1.000000
     }
     <VertexRef> { 0 1 2 3 <Ref> { Cube } }
   }
   <Polygon> {
-    <TRef> { Solid_Rock_Tex }
+    <TRef> { SOLIDROCK.001 }
     <MRef> { Material }
     <Normal> { 0.000000 -0.000000 1.000000
     }
     <VertexRef> { 4 5 6 7 <Ref> { Cube } }
   }
   <Polygon> {
-    <TRef> { Solid_Rock_Tex }
+    <TRef> { SOLIDROCK.001 }
     <MRef> { Material }
     <Normal> { 1.000000 -0.000000 0.000000
     }
     <VertexRef> { 8 9 10 11 <Ref> { Cube } }
   }
   <Polygon> {
-    <TRef> { Solid_Rock_Tex }
+    <TRef> { SOLIDROCK.001 }
     <MRef> { Material }
     <Normal> { -0.000000 -1.000000 -0.000000
     }
     <VertexRef> { 12 13 14 15 <Ref> { Cube } }
   }
   <Polygon> {
-    <TRef> { Solid_Rock_Tex }
+    <TRef> { SOLIDROCK.001 }
     <MRef> { Material }
     <Normal> { -1.000000 0.000000 -0.000000
     }
     <VertexRef> { 16 17 18 19 <Ref> { Cube } }
   }
   <Polygon> {
-    <TRef> { Solid_Rock_Tex }
+    <TRef> { SOLIDROCK.001 }
     <MRef> { Material }
     <Normal> { 0.000000 1.000000 0.000000
     }

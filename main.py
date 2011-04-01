@@ -19,13 +19,18 @@ class world(DirectObject):
 		
 	def loadWorld(self):
 		self.tiles = []
-		ttiles = self.map.generate_tile_array()
+		self.solidMap = []
+		ttiles = self.map.generate_tile_array() # The 'data' of all the squares in an array
+		#print ttiles #~#~#~
 		for tile in ttiles:
 			wallTypes.wallTypes[tile.typeInt].applyCharacteristics(tile)
 			tile.model = loader.loadModel(tile.model)
 			tile.model.setPos(tile.x*4, tile.y*4, 0)
 			tile.model.reparentTo(render)
 			self.tiles.append(tile)
+			
+			#if(
+			
 		legohead = loader.loadModel("data/models/units/lowpol-legohead")
 		legohead.setPos(0, 0, 1)
 		legohead.reparentTo(render)
