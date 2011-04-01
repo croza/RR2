@@ -2,8 +2,8 @@
 
 <Comment> { "Egg laid by Chicken for Blender, version R91" }
 
-<Texture> Untitled {
-  "./textures2/ground.bmp"
+<Texture> GroundTex {
+  "./textures/ground.png"
   <Scalar> saved-result { 1 }
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
@@ -54,7 +54,7 @@
     }
   }
   <Polygon> {
-    <TRef> { Untitled }
+    <TRef> { GroundTex }
     <Normal> { 0.000000 -0.000000 1.000000
     }
     <VertexRef> { 0 1 2 3 <Ref> { Plane } }
