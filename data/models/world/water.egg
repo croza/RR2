@@ -3,7 +3,7 @@
 <Comment> { "Egg laid by Chicken for Blender, version R91" }
 
 <Texture> Untitled {
-  "./textures2/water.bmp"
+  "./textures/water.bmp"
   <Scalar> saved-result { 1 }
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }

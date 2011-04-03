@@ -12,7 +12,7 @@
   <Scalar> shininess {12.5}
 }
 <Texture> HARDROCK.001 {
-  "./textures2/hardrock2.bmp"
+  "./textures/hardrock2.bmp"
   <Scalar> saved-result { 1 }
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
