@@ -12,7 +12,7 @@
   <Scalar> shininess {12.5}
 }
 <Texture> SOLIDROCK.001 {
-  "./textures/solidrock2.png"
+  "./textures/oreseam.png"
   <Scalar> saved-result { 1 }
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
