@@ -12,7 +12,7 @@
   <Scalar> shininess {12.5}
 }
 <Texture> DIRT.001 {
-  "./textures/dirt.bmp"
+  "./textures/dirt.png"
   <Scalar> saved-result { 1 }
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }

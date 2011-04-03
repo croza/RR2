@@ -12,7 +12,7 @@
   <Scalar> shininess {12.5}
 }
 <Texture> LOOSEROCK.001 {
-  "./textures/looserock2.bmp"
+  "./textures/looserock2.png"
   <Scalar> saved-result { 1 }
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
