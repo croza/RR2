@@ -14,6 +14,8 @@ class WallType:
 		
 		self.drillTime = None
 		self.conductPower = None
+		
+		self.texture = None
 	def applyCharacteristics(self, target): # The loaded model?
 		target.fullName = self.fullName # The name of the square
 		target.model = self.model # The model of the square
@@ -23,6 +25,8 @@ class WallType:
 		target.speedCoef = self.speedCoef # The 'bonus' of walking on the square
 		target.drillTime = self.drillTime # Drill time of the square
 		target.conductPower = self.conductPower # If the square is a power path
+		target.texture = self.texture
+		print target.texture
 		
 class WorldLoader:
 	def __init__(self, height, x):
@@ -33,7 +37,6 @@ class WorldLoader:
 		h = 0
 		while(h < len(height)):
 			height2 = [] # Centre, above, below, left, right
-			print h
 			self.ifEdge(height, h, x)
 			hCentre = height[h]
 			if self.edgeL == True:
@@ -123,7 +126,6 @@ class WorldLoader:
 			loadDaPoints(squareData)
 			tempNo+=1
 			
-		print points
 		return points
 			
 	
@@ -143,6 +145,7 @@ for t in wallTypeNums:
 	theType.fullName = wallConfig.get(tname, "fullName")
 	theType.model = wallConfig.getpath(tname, "model") # The path to the wall file models?
 	theType.solid = wallConfig.getboolean(tname, "solid")
+	theType.texture = wallConfig.get(tname, "texture")
 	if not theType.solid: # things that only apply if the wall isn't solid
 		theType.canWalk = wallConfig.getboolean(tname, "walkable")
 		theType.isWater = wallConfig.getboolean(tname, "water")

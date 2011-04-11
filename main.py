@@ -24,7 +24,6 @@ class world(DirectObject):
 		heightMap = self.map.getHeightMap()
 		print heightMap
 		w = wallTypes.WorldLoader(heightMap, 5).drawStuff(heightMap, 5)
-		print w
 		ttiles = self.map.generate_tile_array() # The 'data' of all the squares in an array
 		# print ttiles
 		tileNumber = 0
@@ -32,12 +31,14 @@ class world(DirectObject):
 
 		for tile in ttiles:
 			wallTypes.wallTypes[tile.typeInt].applyCharacteristics(tile)
-			tile.model = loader.loadModel(tile.model)
-			tile.model.setPos(tile.x*4, tile.y*4, 0)
-			tile.model.reparentTo(render)
+			
+			#tile.model = loader.loadModel(tile.model)
+			#tile.model.setPos(tile.x*4, tile.y*4, 0)
+			#tile.model.reparentTo(render)
+			
 			tiles3 = self.loadTriangles(w, tileNumber, 4*tile.x, 4*tile.y)
 			tiles3.reparentTo(render)
-			tiles3.setTexture(tex, 1)
+			tiles3.setTexture(loader.loadTexture(tile.texture), 1)
 			self.tiles.append(tile)
 			tileNumber += 1
 			
@@ -79,7 +80,6 @@ class world(DirectObject):
 		topCentre = triData[6]
 		topLeft = triData[7]
 		leftCentre = triData[8]
-		print centre, bottomLeft, bottomRight, rightCentre, topRight, topCentre, topLeft, leftCentre	
 		
 		vertices.addData3f(x, y, centre) # 0 vertices
 		texcoord.addData2f(0.5,0.5)
