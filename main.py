@@ -93,9 +93,10 @@ class world(DirectObject):
 		texcoord.addData2f(1,0.5)
 		vertices.addData3f(x+size, y+size, topRight) # 5th
 		texcoord.addData2f(1,1)
-		vertices.addData3f(x-size, y+size, topCentre) # 6th
+		vertices.addData3f(x, y+size, topCentre) # 6th
 		texcoord.addData2f(0.5,1)
-		vertices.addData3f(x-size, y, topLeft) # 7th
+		vertices.addData3f(x-size, y+size, topLeft) # 7th
+		print x-size, y, topLeft
 		texcoord.addData2f(0,1)
 		vertices.addData3f(x-size, y, leftCentre) # 8th
 		texcoord.addData2f(0,0.5)

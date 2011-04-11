@@ -26,7 +26,6 @@ class WallType:
 		target.drillTime = self.drillTime # Drill time of the square
 		target.conductPower = self.conductPower # If the square is a power path
 		target.texture = self.texture
-		print target.texture
 		
 class WorldLoader:
 	def __init__(self, height, x):
@@ -106,7 +105,7 @@ class WorldLoader:
 			rightCentre = centre - (centre - right)/2
 			topRight = centre - (right - above)/2
 			topCentre = centre - (centre - above)/2
-			topLeft = centre - (above - left)/2
+			topLeft = centre - (left - above)/2
 			leftCentre = centre - (left - centre)/2
 			
 			squarePoints.append(centre)
