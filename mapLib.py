@@ -53,10 +53,10 @@ class Map:
 			self.data_offset = self.data_parser.get("map", "map_data_offset")
 		except:
 			self.data_offset = 0
+			
 	def generate_tile_array(self): # Makes an array for the grid?
-		self.width = self.data_parser.getint("map", "width") # width of the map
+		self.width = self.data_parser.getint("map", "width") # width of the map	
 		self.height = self.data_parser.getint("map", "height") # Height of the map
-		
 		wall = self.file.open("maps/wall.map", "r")
 		resource = self.file.open("maps/resource.map", "r")
 		wall.read(self.data_offset)
@@ -67,8 +67,8 @@ class Map:
 			raise ValueError, "Wall file has bad length"
 		if len(resourceData) != (self.width*self.height*4): # If the length of the file is not equal...
 			raise ValueError, "Resource file has bad length"
-		
 		tiles = []
+		
 		for tilenum in range(self.width*self.height): # For tilenum in range <size of map>
 			wallValue = wallData[tilenum*4:(tilenum+1)*4:] # The un-hex'd value of the wall file
 			resD = resourceData[tilenum*4:(tilenum+1)*4:] # Same with the resource file
@@ -77,9 +77,23 @@ class Map:
 			crystals, ore = struct.unpack("<HH", resD)
 			x, y = tilenum%self.width, tilenum//self.width
 			tiles.append(Tile(x, y, wallType, crystals, ore))
-
+			
 		return tiles # Returns a list with all the wall data in
-
+		
+	def getHeightMap(self):
+		self.width = self.data_parser.getint("map", "width") # width of the map	
+		self.height = self.data_parser.getint("map", "height") # Height of the map
+		height = self.file.open("maps/height.map") # For the height
+		height.read(self.data_offset)
+		heightData = height.read()
+		heightMap = []
+		for h in range(self.width*self.height):
+			heightValue = heightData[h*4:(h+1)*4:]
+			heightV = struct.unpack("<I", heightValue)[0]
+			heightMap.append(heightV)
+			
+		return heightMap
+		
 	def generate_tile_array_old_format(self):
 		self.width = self.data_parser.getint("map", "width")
 		self.height = self.data_parser.getint("map", "height")
