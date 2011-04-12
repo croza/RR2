@@ -88,3 +88,4 @@ class basicMoving(DirectObject):
 			self.box.setPos(self.pointer.getPos())
                 
 		return Task.cont
+		
