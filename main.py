@@ -4,6 +4,7 @@ import random
 import mapLib
 import config
 import wallTypes
+import moving2
 
 from direct.showbase.DirectObject import DirectObject
 from pandac.PandaModules import AmbientLight
@@ -40,9 +41,12 @@ class world(DirectObject):
 			tiles3 = self.loadTriangles(w, tileNumber, 4*tile.x, 4*tile.y, tile.solid)
 			tiles3.setCollideMask(0x1)
 			tiles3.reparentTo(render)
+
 			tiles3.setTexture(loader.loadTexture(tile.texture), 1)
 			self.tiles.append(tile)
 			tileNumber += 1
+			
+		# print self.tiles
 			
 		# legohead = loader.loadModel("data/models/units/lowpol-legohead")
 		# legohead.setPos(0, 0, 1)
@@ -102,7 +106,7 @@ class world(DirectObject):
 			texcoord2.addData2f(0.5,0)
 			
 			def addSolid2(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11):
-				solids.addVertices(v0, v2, v1)
+				solids.addVertices(v0, v2, v1) # Makes triangles from vertices...
 				solids.addVertices(v4, v1, v2)
 				solids.addVertices(v2, v3, v4)
 				solids.addVertices(v3, v5, v4)
@@ -157,7 +161,7 @@ class world(DirectObject):
 			addSolid(x, y, size)
 			geom = Geom(data) 
 			geom.addPrimitive(solids) 
-			node = GeomNode("Tile") 
+			node = GeomNode("Solid") 
 			node.addGeom(geom)
 		
 		else:

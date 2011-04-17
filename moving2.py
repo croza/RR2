@@ -19,23 +19,46 @@ import random, sys, os, math
 
 from panda3d.ai import *
 
+import main
+
 speed = 1
+
+font = loader.loadFont("cmss12")
+
+# Function to put instructions on the screen.
+def addInstructions(pos, msg):
+    return OnscreenText(text=msg, style=1, fg=(1,1,1,1), font = font,
+                        pos=(-1.3, pos), align=TextNode.ALeft, scale = .05)
+
+# Function to put title on the screen.
+def addTitle(text):
+    return OnscreenText(text=text, style=1, fg=(1,1,1,1), font = font,
+                        pos=(1.3,-0.95), align=TextNode.ARight, scale = .07)
 
 class HeightMoving(DirectObject):
 	def __init__(self):
+		self.title = addTitle("RR2, heightmap and pathing")
+		self.inst1 = addInstructions(0.95, "[ESC]: Quit")
+		self.inst2 = addInstructions(0.90, "[Space ]: Start Pathfinding (to the pointer")
+		self.inst3 = addInstructions(0.85, "[WASD]: Move the arrow")
+	
 		self.switchState = True
 		self.switchCam = False
 		self.path_no = 1
 		self.keyMap = {"left":0, "right":0, "up":0, "down":0}
 		base.win.setClearColor(Vec4(0,0,0,1))
 		
-		ActorStartPos = Vec3(6, 6, 10)
+		ActorStartPos = Vec3(8, 8, 100)
 		self.Actor = Actor("data/models/units/lowpol-legohead")
 		self.Actor.reparentTo(render)
+		self.Actor.setPos(ActorStartPos)
 		self.Actor.setScale(0.3)
 		
-		self.Actor.setPos(ActorStartPos)
-		self.ActorAI = Actor("data/models/units/lowpol-legohead")
+		Actor2StartPos = Vec3(8, 8, 100)
+		self.Actor2 = Actor("data/models/units/lowpol-legohead")
+		self.Actor2.reparentTo(render)
+		self.Actor2.setPos(ActorStartPos)
+		self.Actor2.setScale(0.3)
 		 
 		self.pointer = loader.loadModel("data/models/game/arrow") # Directory of the pointer (we will need to make a new model for this, and it will have to be rendered on -and at- mouse click)
 		self.pointer.setColor(1,0,0)
@@ -69,6 +92,8 @@ class HeightMoving(DirectObject):
 		self.cTrav.showCollisions(render)
 		
 		self.setAI()
+		
+		self.addWalls()
 		
 		self.pointer_move = False
 		
@@ -124,32 +149,33 @@ class HeightMoving(DirectObject):
 		self.accept("arrow_down-up", self.setKey, ["down",0])
 		self.accept("space", self.setMove)
 
-		self.AIchar = AICharacter("actor",self.Actor, 60, 0.05, 25)
+		self.AIchar = AICharacter("Actor", self.Actor, 10, 1.0, 1.0) #string Character_name, NodePath model_nodepath, double mass, double movement_force, double maximum_force
 		self.AIworld.addAiChar(self.AIchar)
+		self.move()
 		self.AIbehaviors = self.AIchar.getAiBehaviors()
 		self.AIbehaviors.initPathFind("data/models/game/navmesh2.csv")
-        
-		#AI World update        
-		taskMgr.add(self.AIUpdate,"AIUpdate")
 		
 	def rounder(self, x, base = 2):
 		return int(base * round(float(x)/base))
 		
 	def setMove(self):
-        #self.AIbehaviors.addStaticObstacle(self.box)
-        #self.AIbehaviors.addStaticObstacle(self.box1)
-		self.mehPos = Vec3(self.rounder(self.pointer.getX()),self.rounder(self.pointer.getY()),int(self.pointer.getZ()))
+		# self.AIchar = AICharacter("actor",self.Actor, 100, 0.05, 15)
+		self.AIworld.addAiChar(self.AIchar)
+		self.AIbehaviors = self.AIchar.getAiBehaviors()
+		self.AIbehaviors.initPathFind("data/models/game/navmesh2.csv")
+		
+		self.mehPos = Vec3(self.rounder(self.pointer.getX()),self.rounder(self.pointer.getY()),5)
 		print self.mehPos
 		self.AIbehaviors.pathFindTo(self.mehPos)
 		#self.ralph.loop("run")
+		taskMgr.add(self.AIUpdate,"AIUpdate")
 		
 	def AIUpdate(self,task):
 		self.AIworld.update()
 		self.move()
-		#print self.AIbehaviors.behaviorStatus("pathfollow")
-		
+
 		if(self.AIbehaviors.behaviorStatus("pathfollow") == "done"):
-			self.TaskSomething = False
+			self.move() # To ensure that it stays on top of the ground
 			return Task.done
 		else:
 			return Task.cont

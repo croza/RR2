@@ -30,8 +30,8 @@ class CameraHandler(DirectObject.DirectObject):
       base.disableMouse() 
       # This disables the default mouse based camera control used by panda. This default control is awkward, and won't be used. 
        
-      base.camera.setPos(0,20,20) 
-      base.camera.lookAt(0,0,0) 
+      base.camera.setPos(0,0,0) 
+      base.camera.lookAt(0,20,0) 
       # Gives the camera an initial position and rotation. 
        
       self.mx,self.my=0,0 
@@ -118,6 +118,7 @@ class CameraHandler(DirectObject.DirectObject):
          newCamPos.setY(-self.camDist*math.cos(angleradiansX)*math.cos(angleradiansY)+self.target.getY()) 
          newCamPos.setZ(-self.camDist*math.sin(angleradiansY)+self.target.getZ()) 
          base.camera.setPos(newCamPos.getX(),newCamPos.getY(),newCamPos.getZ()) 
+         # print (newCamPos.getX(),newCamPos.getY(),newCamPos.getZ()) 
          # Performs the actual math to calculate the camera's new position and sets the camera to that position. 
          #Unfortunately, this math is over my head, so I can't fully explain it. 
                       
@@ -243,5 +244,5 @@ class CameraHandler(DirectObject.DirectObject):
          self.mx=mpos.getX() 
          self.my=mpos.getY() 
          # The old mouse positions are updated to the current mouse position as the final step. 
-          
+
       return task.cont
