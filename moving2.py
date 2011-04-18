@@ -40,7 +40,7 @@ class HeightMoving(DirectObject):
 		self.title = addTitle("RR2, heightmap and pathing")
 		self.inst1 = addInstructions(0.95, "[ESC]: Quit")
 		self.inst2 = addInstructions(0.90, "[Space ]: Start Pathfinding (to the pointer")
-		self.inst3 = addInstructions(0.85, "[WASD]: Move the arrow")
+		self.inst3 = addInstructions(0.85, "[Up/Right/Down/Left]: Move the arrow")
 	
 		self.switchState = True
 		self.switchCam = False
