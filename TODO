@@ -2,5 +2,5 @@ TODO!
 
 · Add more TODOs
 · Get some better textures - see http://opengameart.org/ - I've done some browsing and put in one of them.
-· Smoothing out pathfinding (rewrite, and add the ability to pathfind many things at once) - - Someone needs to deal with the random movingness of it
-· Drawing models rather than using .eggs - - Needs finalizing, and walls need to be 'smoothed'
+· Smoothing out pathfinding (rewrite, and add the ability to pathfind many things at once)
+· Inside corners?

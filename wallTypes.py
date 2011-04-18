@@ -1,5 +1,7 @@
 import config
 
+import decimal
+
 class WallType:
 	def __init__(self):
 		# Adding names to allow their later filling by the config reader
@@ -42,14 +44,20 @@ class WorldLoader:
 				hLeft = height[h]
 			else:
 				hLeft = height[h-1]
+				
 			if self.edgeR == True:
 				hRight = height[h]
 			else:
-				hLeft = height[h+1]
+				try:
+					hRight = height[h+1]
+				except:
+					hRight = height[h]
+				
 			try:
 				hAbove = height[h+x]
 			except:
 				hAbove = height[h]
+				
 			try:
 				hBelow = height[h-x]
 			except:
@@ -66,30 +74,80 @@ class WorldLoader:
 		# print heightCoords
 		points = self.loadPoints(heightCoords, x)
 		return points
+		
+	def difference(self, centre, other): # To decide which is the larger number, ONLY FOR USE WITH THE CENTRE
+		def difference2(n1, n2): # Finds difference
+			return (n1 - n2)
+			
+		if (centre < other): # Decides what is the biggest number, and calls difference2
+			tileSize = difference2(centre, other)
+			tileSize1 = decimal.Decimal(centre)-decimal.Decimal(other)
+			tileSize2 = decimal.Decimal(tileSize1)/2
+			self.CB += 1
+			#print self.CB,self.CS
+			return other + decimal.Decimal(tileSize2)
+			
+		elif (other < centre):
+			tileSize = difference2(other, centre)
+			tileSize1 = decimal.Decimal(other)-decimal.Decimal(centre)
+			tileSize2 = decimal.Decimal(tileSize1)/2
+			self.CS += 1
+			#print self.CS,self.CB
+			return centre + decimal.Decimal(tileSize2)
+		else:
+			return centre
+			
+	def otherDifference(self, MAC, LAC): # For the corners of tiles, Most Anti-Clockwise, Least Anti-Clockwise
+		def difference2(n1, n2):
+			return (n1 - n2)
+		if (MAC < LAC):
+			tileSize = difference2(MAC, LAC)
+			biggest = MAC
+			smallest = LAC
+		elif (LAC < MAC):
+			tileSize = difference2(LAC, MAC)
+			biggest = LAC
+			smallest = MAC
+		else:
+			return MAC
+		tileSize1 = decimal.Decimal(biggest)-decimal.Decimal(smallest)
+		tileSize2 = decimal.Decimal(tileSize1)/2
+		tileSize3 = smallest + decimal.Decimal(tileSize2)
+		return tileSize3
 
 	def ifEdge(self, list, current, x):
-		def task(a, r):
-			if a == r:
-				return True
-			else:
-				return False
-		self.edgeL = False
-		self.edgeR = False
-		
-		actual = (current - 1)/x
-		rounded = round(actual)
-		
-		if task(actual, rounded) == True:
-			self.edgeL = True
+		if (current < len(list)):
+			def task(a, r):
+				if a == r:
+					return True
+				else:
+					return False
+					
+			self.edgeL = False
+			self.edgeR = False
 			
-		actual = (current + 1)/x
-		rounded = round(actual)
-		
-		if task(actual, rounded) == True:
-			self.edgeR = True
+			actual = decimal.Decimal(current - 1)/x
+			rounded = round(actual)
+			
+			if task(actual, rounded) == True:
+				self.edgeL = True
+				
+			try:
+				actual = decimal.Decimal(current + 1)/x
+			except:
+					actual = decimal.Decimal(current)/x
+			
+			rounded = round(actual)
+			
+			print str(current)+"  ",actual,rounded
+			
+			if task(actual, rounded) == True:
+				self.edgeR = True
 		
 	def loadPoints(self, HC, x): # Starts bottom left, works round ANTIclockwise
 		points = [] # A list containing a list of points for each square
+		self.CB = 0
+		self.CS = 0
 		def loadDaPoints(listLoad): # Works out what each corner 
 			squarePoints = [] # The points for each square
 			centre = int(listLoad[0])
@@ -97,16 +155,29 @@ class WorldLoader:
 			below = int(listLoad[2])
 			left = int(listLoad[3])
 			right = int(listLoad[4])
+			
+			try:
+				previousTile = points[len(points)-1]
+			except:
+				previousTile = [centre, centre, centre, centre, centre, centre, centre]
+				
+			try:
+				belowTile = points[len(points)-x]
+			except:
+				belowTile = [centre, centre, centre, centre, centre, centre, centre]
 			#print centre, above, below, left, right
 			
-			bottomLeft = centre - (left - below)/2
-			bottomCentre = centre - (centre - below)/2
-			bottomRight = centre - (right - below)/2
-			rightCentre = centre - (centre - right)/2
-			topRight = centre - (right - above)/2
-			topCentre = centre - (centre - above)/2
-			topLeft = centre - (left - above)/2
-			leftCentre = centre - (left - centre)/2
+			bottomCentre = self.difference(centre, below)
+			rightCentre = self.difference(centre, right)
+			topCentre = self.difference(centre, above)
+			leftCentre = self.difference(centre, left)
+			bottomLeft = previousTile[3]
+			#bottomLeft = self.otherDifference(leftCentre, bottomCentre)
+			bottomRight = belowTile[5]
+			topRight = self.otherDifference(rightCentre, topCentre)
+			topLeft = previousTile[5]
+			
+			#topLeft = self.otherDifference(leftCentre, topCentre)
 			
 			squarePoints.append(centre)
 			squarePoints.append(bottomLeft)
@@ -122,6 +193,7 @@ class WorldLoader:
 		tempNo = 0
 		while(tempNo < len(HC)):
 			squareData = HC[tempNo] # Gets the square info from the grid (see drawStuff)
+			#print squareData
 			loadDaPoints(squareData)
 			tempNo+=1
 			

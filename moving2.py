@@ -36,7 +36,7 @@ def addTitle(text):
                         pos=(1.3,-0.95), align=TextNode.ARight, scale = .07)
 
 class HeightMoving(DirectObject):
-	def __init__(self):
+	def __init__(self, list):
 		self.title = addTitle("RR2, heightmap and pathing")
 		self.inst1 = addInstructions(0.95, "[ESC]: Quit")
 		self.inst2 = addInstructions(0.90, "[Space ]: Start Pathfinding (to the pointer")
@@ -53,12 +53,6 @@ class HeightMoving(DirectObject):
 		self.Actor.reparentTo(render)
 		self.Actor.setPos(ActorStartPos)
 		self.Actor.setScale(0.3)
-		
-		Actor2StartPos = Vec3(8, 8, 100)
-		self.Actor2 = Actor("data/models/units/lowpol-legohead")
-		self.Actor2.reparentTo(render)
-		self.Actor2.setPos(ActorStartPos)
-		self.Actor2.setScale(0.3)
 		 
 		self.pointer = loader.loadModel("data/models/game/arrow") # Directory of the pointer (we will need to make a new model for this, and it will have to be rendered on -and at- mouse click)
 		self.pointer.setColor(1,0,0)
@@ -87,13 +81,11 @@ class HeightMoving(DirectObject):
 		self.cTrav.addCollider(self.ActorGroundColNp, self.ActorGroundHandler)
 		
 		self.ActorGroundColNp.show()
-		# self.camGroundColNp.show()
 		
 		self.cTrav.showCollisions(render)
 		
+		self.list = list
 		self.setAI()
-		
-		self.addWalls()
 		
 		self.pointer_move = False
 		
@@ -117,7 +109,7 @@ class HeightMoving(DirectObject):
 		
 	def move(self):
 		elapsed = globalClock.getDt()
-		startpos = self.Actor.getPos()
+		startpos2 = self.Actor.getPos()
 		
 		self.cTrav.traverse(render)
 		
@@ -130,10 +122,10 @@ class HeightMoving(DirectObject):
 		if (len(entries)>0) and (entries[0].getIntoNode().getName() == "Tile"):
 			self.Actor.setZ(entries[0].getSurfacePoint(render).getZ())
 		else:
-			self.Actor.setPos(startpos)
+			self.Actor.setPos(startpos2)
 			
 		self.Actor.setP(0)
-		#return Task.cont
+		return Task.cont
 		
 	def setAI(self):
 		 #Creating AI World
@@ -151,9 +143,17 @@ class HeightMoving(DirectObject):
 
 		self.AIchar = AICharacter("Actor", self.Actor, 10, 1.0, 1.0) #string Character_name, NodePath model_nodepath, double mass, double movement_force, double maximum_force
 		self.AIworld.addAiChar(self.AIchar)
-		self.move()
+		
+		self.move() # To set the model to the ground
 		self.AIbehaviors = self.AIchar.getAiBehaviors()
 		self.AIbehaviors.initPathFind("data/models/game/navmesh2.csv")
+		
+		
+	def loadWalls(self):
+		for tile in self.list:
+			if (tile.solid == True):
+				self.AIbehaviors.addStaticObstacle(tile.model)
+				print tile.model.getPos()
 		
 	def rounder(self, x, base = 2):
 		return int(base * round(float(x)/base))
@@ -163,6 +163,8 @@ class HeightMoving(DirectObject):
 		self.AIworld.addAiChar(self.AIchar)
 		self.AIbehaviors = self.AIchar.getAiBehaviors()
 		self.AIbehaviors.initPathFind("data/models/game/navmesh2.csv")
+		
+		self.loadWalls()
 		
 		self.mehPos = Vec3(self.rounder(self.pointer.getX()),self.rounder(self.pointer.getY()),5)
 		print self.mehPos

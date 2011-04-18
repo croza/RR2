@@ -1,8 +1,8 @@
 import mapLib
 
 tiles = []
-for x in range(5):
-	for y in range(5):
+for x in range(10):
+	for y in range(10):
 		tiles.append(mapLib.Tile(x, y, 0, 0, 0))
 
 print tiles

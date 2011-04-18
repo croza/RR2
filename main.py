@@ -20,40 +20,74 @@ class world(DirectObject):
 		self.loadWorld()
 		self.loadLight()
 		
+		s = moving2.HeightMoving(self.tiles)
+		
 	def loadWorld(self):
 		self.tiles = []
 		self.solidMap = []
 		heightMap = self.map.getHeightMap()
 		print heightMap
-		w = wallTypes.WorldLoader(heightMap, 5).drawStuff(heightMap, 5)
+		w = wallTypes.WorldLoader(heightMap, 10).drawStuff(heightMap, 10) #~# NEEDS FUNCTION TO BE ADDED TO AUTOMATICALLY GET THE SIZE
 		ttiles = self.map.generate_tile_array() # The 'data' of all the squares in an array
 		# print ttiles
 		tileNumber = 0
 		tex = loader.loadTexture('data/models/world/textures/ground.png')
-
-		for tile in ttiles:		
+		
+		for tile in ttiles:
 			wallTypes.wallTypes[tile.typeInt].applyCharacteristics(tile)
-			
-			#tile.model = loader.loadModel(tile.model)
-			#tile.model.setPos(tile.x*4, tile.y*4, 0)
-			#tile.model.reparentTo(render)
-			
-			tiles3 = self.loadTriangles(w, tileNumber, 4*tile.x, 4*tile.y, tile.solid)
-			tiles3.setCollideMask(0x1)
-			tiles3.reparentTo(render)
+		
+		for tile in ttiles:		
+			aroundInfo = [] # The stuff below is to get the data for squares around the current square...
+			try:
+				above = ttiles[tileNumber+10] #~# SAME HERE
+			except:
+				above = ttiles[tileNumber]
+			try:
+				below = ttiles[tileNumber-10]
+			except:
+				below = ttiles[tileNumber]
+			try:
+				right = ttiles[tileNumber+1]
+			except:
+				right = ttiles[tileNumber]
+			try:
+				left = ttiles[tileNumber-1]
+			except:
+				left = ttiles[tileNumber]
+				
+			print tileNumber, tile.solid#, ttiles[tileNumber], left.solid
+			if(tile.solid == True):
+				if(above.solid == True): # Starts above, goes round anti-clockwise, could def something for this...
+					aroundInfo.append(1)
+				else:
+					aroundInfo.append(0)
+				if(left.solid == True):
+					aroundInfo.append(1)
+				else:
+					aroundInfo.append(0)
+				if(below.solid == True):
+					aroundInfo.append(1)
+				else:
+					aroundInfo.append(0)
+				if(right.solid == True):
+					aroundInfo.append(1)
+				else:
+					aroundInfo.append(0)
+					
+				print aroundInfo
+				
+			tile.model = self.loadTriangles(w, tileNumber, tile, aroundInfo)
+			tile.model.setCollideMask(0x1)
+			tile.model.setPos((4*tile.x)-1, (4*tile.y)-1, 0)
+			tile.model.reparentTo(render)
 
-			tiles3.setTexture(loader.loadTexture(tile.texture), 1)
+			tile.model.setTexture(loader.loadTexture(tile.texture), 1)
 			self.tiles.append(tile)
 			tileNumber += 1
 			
 		# print self.tiles
-			
-		# legohead = loader.loadModel("data/models/units/lowpol-legohead")
-		# legohead.setPos(0, 0, 1)
-		# legohead.setScale(3)
-		# legohead.reparentTo(render) ## Commented for the moving stuff
 		
-	def loadTriangles(self, list, number, x, y, solid):
+	def loadTriangles(self, list, number, tile, around):
 		# format = GeomVertexFormat.getV3() 
 		format = GeomVertexFormat.getV3n3c4t2()
 		data = GeomVertexData("Data", format, Geom.UHStatic) 
@@ -79,30 +113,30 @@ class world(DirectObject):
 			triangles.addVertices(v0, v8, v1)
 			triangles.closePrimitive()
 			
-		def addSolid(x, y, size):		# Starts in the bottom left, anti-clockwise, ends with the top
-			vertices2.addData3f(x-size, y-size, bottomLeft) # 0
+		def addSolid(size, tile, around):		# Starts in the bottom left, anti-clockwise, ends with the top
+			vertices2.addData3f(-size, -size, bottomLeft/2) # 0 BottomLeft
 			texcoord2.addData2f(0,0)
-			vertices2.addData3f(x-size, y-size, bottomLeft+2*size) # 1
+			vertices2.addData3f(-size, -size, bottomLeft+2*size) # 1 BLT (bottom left top)
 			texcoord2.addData2f(0,1)
-			vertices2.addData3f(x, y-size, bottomCentre) # 2
+			vertices2.addData3f(0, -size, bottomCentre/2) # 2 BC
 			texcoord2.addData2f(0.5,0)
-			vertices2.addData3f(x+size, y-size, bottomRight) # 3
+			vertices2.addData3f(size, -size, bottomRight/2) # 3 BR
 			texcoord2.addData2f(1,0)
-			vertices2.addData3f(x+size, y-size, bottomRight+2*size) # 4
+			vertices2.addData3f(size, -size, bottomRight+2*size) # 4 BRT
 			texcoord2.addData2f(1,1)
-			vertices2.addData3f(x+size, y, rightCentre) # 5
+			vertices2.addData3f(size, 0, rightCentre/2) # 5 RC
 			texcoord2.addData2f(0.5,0)
-			vertices2.addData3f(x+size, y+size, topRight) # 6
+			vertices2.addData3f(size, size, topRight/2) # 6 TR
 			texcoord2.addData2f(1,0)
-			vertices2.addData3f(x+size, y+size, topRight+2*size) # 7
+			vertices2.addData3f(size, size, topRight+2*size) # 7 TRT
 			texcoord2.addData2f(1,1)
-			vertices2.addData3f(x, y+size, topCentre) # 8
+			vertices2.addData3f(0, size, topCentre/2) # 8 TC
 			texcoord2.addData2f(0.5,0)
-			vertices2.addData3f(x-size, y+size, topLeft) # 9
+			vertices2.addData3f(-size, +size, topLeft/2) # 9 TL
 			texcoord2.addData2f(1,0)
-			vertices2.addData3f(x-size, y+size, topLeft+2*size) #10
+			vertices2.addData3f(-size, size, topLeft+2*size) #10 TLT
 			texcoord2.addData2f(1,1)
-			vertices2.addData3f(x-size, y, leftCentre) # 11
+			vertices2.addData3f(-size, 0, leftCentre/2) # 11 LC
 			texcoord2.addData2f(0.5,0)
 			
 			def addSolid2(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11):
@@ -122,7 +156,43 @@ class world(DirectObject):
 				solids.addVertices(v4, v7, v10)
 				solids.closePrimitive()
 				
-			addSolid2(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+			def plainWall(v0, v1, v2, v3, v4): # Adds a plain, flat, wall. v0 being the lowest left, anti-clockwise
+				solids.addVertices(v0, v1, v4) # Triangle, the furthest 'left' of the wall
+				solids.addVertices(v1, v3, v4) # Middle triangle
+				solids.addVertices(v1, v2, v3) # Right Triangle
+				solids.closePrimitive()
+			
+			def cornerOut(v0, v1, v2, v3, v4, v5): # v0 is the top, v1 is TL, v2 CL, v3 BL, v4 CB, v5 BR
+				solids.addVertices(v0, v1, v2)
+				solids.addVertices(v0, v2, v3)
+				solids.addVertices(v0, v3, v4)
+				solids.addVertices(v0, v4, v5)
+				solids.closePrimitive()
+				
+			if ((around[0] == 1) and (around[1] == 0) and (around[2] == 1) and (around[3] == 1)): # Slanting to the left (looking from the 'bottom' of the map upwards)
+				plainWall(9, 11, 0, 4, 7)
+				
+			elif ((around[0] == 1) and (around[1] == 1) and (around[2] == 1) and (around[3] == 0)): # Slanting to the right
+				plainWall(3, 5, 6, 10, 1)
+				
+			elif ((around[0] == 1) and (around[1] == 1) and (around[2] == 0) and (around[3] == 1)): # Slanting downwards
+				plainWall(0, 2, 3, 7, 10)
+				
+			elif ((around[0] == 0) and (around[1] == 1) and (around[2] == 1) and (around[3] == 1)): # Slanting upwards
+				plainWall(6, 8, 9, 1, 4)
+				
+			elif ((around[0] == 1) and (around[1] == 0) and (around[2] == 0) and (around[3] == 1)): # Corner, if Above and Left
+				cornerOut(7, 9, 11, 0, 2, 3)
+			
+			elif ((around[0] == 1) and (around[1] == 1) and (around[2] == 0) and (around[3] == 0)): # Corner, if Above and Right
+				cornerOut(10, 0, 2, 3, 5, 6)
+				
+			elif ((around[0] == 0) and (around[1] == 1) and (around[2] == 1) and (around[3] == 0)): # Corner, if Below and Left
+				cornerOut(1, 3, 5, 6, 8, 9)
+				
+			elif ((around[0] == 0) and (around[1] == 0) and (around[2] == 1) and (around[3] == 1)): # Corner, if Below and Right
+				cornerOut(4, 6, 8, 9, 11, 0)
+			#addSolid2(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
 		
 		triData = list[number]
 		
@@ -136,29 +206,29 @@ class world(DirectObject):
 		topLeft = triData[7]
 		leftCentre = triData[8]
 		
-		vertices.addData3f(x, y, centre) # 0 vertices ## This bit is adding the vertices to make triangles out of
+		vertices.addData3f(0, 0, centre/2) # 0 vertices ## This bit is adding the vertices to make triangles out of
 		texcoord.addData2f(0.5,0.5) # And the UV coords
-		vertices.addData3f(x-size, y-size, bottomLeft) # 1st
+		vertices.addData3f(-size, -size, bottomLeft/2) # 1st
 		texcoord.addData2f(0,0)
-		vertices.addData3f(x, y-size, bottomCentre) # 2nd
+		vertices.addData3f(0, -size, bottomCentre/2) # 2nd
 		texcoord.addData2f(0.5,0)
-		vertices.addData3f(x+size, y-size, bottomRight) # 3rd
+		vertices.addData3f(size, -size, bottomRight/2) # 3rd
 		texcoord.addData2f(1,0)
-		vertices.addData3f(x+size, y, rightCentre) # 4th
+		vertices.addData3f(size, 0, rightCentre/2) # 4th
 		texcoord.addData2f(1,0.5)
-		vertices.addData3f(x+size, y+size, topRight) # 5th
+		vertices.addData3f(size, size, topRight/2) # 5th
 		texcoord.addData2f(1,1)
-		vertices.addData3f(x, y+size, topCentre) # 6th
+		vertices.addData3f(0, size, topCentre/2) # 6th
 		texcoord.addData2f(0.5,1)
-		vertices.addData3f(x-size, y+size, topLeft) # 7th
+		vertices.addData3f(-size, +size, topLeft/2) # 7th
 		texcoord.addData2f(0,1)
-		vertices.addData3f(x-size, y, leftCentre) # 8th
+		vertices.addData3f(-size, 0, leftCentre/2) # 8th
 		texcoord.addData2f(0,0.5)
 		
 		addTile(0, 1, 2, 3, 4, 5, 6, 7, 8) # Calls the task to make a tile
 		
-		if solid == True:
-			addSolid(x, y, size)
+		if tile.solid == True:
+			addSolid(size, tile, around)
 			geom = Geom(data) 
 			geom.addPrimitive(solids) 
 			node = GeomNode("Solid") 
