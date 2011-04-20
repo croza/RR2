@@ -1,2 +1,0 @@
-The new format maps are kept in a .zip file.
-The surface data of the map are kept in the wall.map, with 4 bites for each wall (4 hex integers).
