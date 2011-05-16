@@ -33,37 +33,39 @@ class WorldLoader:
 	def __init__(self, height, x):
 		self.drawStuff(height, x)
 	
-	def drawStuff(self, height, x):
-		heightCoords = []
-		h = 0
+	def drawStuff(self, height, x): # Gets the height of the tiles surrounding the current tile
+		heightCoords = [] # list to put the heights into
+		h = 0 # Increases for every while, useful in calcs (see below)
 		while(h < len(height)):
-			height2 = [] # Centre, above, below, left, right
-			self.ifEdge(height, h, x)
-			hCentre = height[h]
-			if self.edgeL == True:
+			height2 = [] # It will be used to store the height for around squares; centre, above, below, left, right. Used for calculations.
+			self.ifEdge(height, h, x) # Test to see if the tile is an edge tile, if it is things will work a bit differently.
+			
+			hCentre = height[h] # Gets the centre point of the current square, which is the only given point from the heightmap, and will be crutial for calculations.
+			
+			if self.edgeL == True: # Gets the left height, unless it is at the edge, when it is the same as the tile's height.
 				hLeft = height[h]
-			else:
+			else: # Lots of elses around, because the map is never a fixed size.
 				hLeft = height[h-1]
 				
-			if self.edgeR == True:
+			if self.edgeR == True: # Repeated with right
 				hRight = height[h]
 			else:
 				try:
 					hRight = height[h+1]
-				except:
+				except: # This is here because of the last square, which doesn't have a square to its right :(
 					hRight = height[h]
 				
-			try:
+			try: # And above
 				hAbove = height[h+x]
 			except:
 				hAbove = height[h]
 				
-			try:
+			try: # And below...
 				hBelow = height[h-x]
 			except:
 				hBelow = height[h]
 				
-			height2.append(hCentre)
+			height2.append(hCentre) # Adding to list, which is used in the next set of calculations (working out heights)
 			height2.append(hAbove)
 			height2.append(hBelow)
 			height2.append(hLeft)
@@ -72,27 +74,25 @@ class WorldLoader:
 			h += 1
 			
 		# print heightCoords
-		points = self.loadPoints(heightCoords, x)
+		points = self.loadPoints(heightCoords, x) # Next function (below, quite far below)
 		return points
 		
 	def difference(self, centre, other): # To decide which is the larger number, ONLY FOR USE WITH THE CENTRE
 		def difference2(n1, n2): # Finds difference
 			return (n1 - n2)
 			
-		if (centre < other): # Decides what is the biggest number, and calls difference2
+		if (centre < other): # Decides what is the biggest number, and calls difference2, in this case the centre is bigger
 			tileSize = difference2(centre, other)
 			tileSize1 = decimal.Decimal(centre)-decimal.Decimal(other)
 			tileSize2 = decimal.Decimal(tileSize1)/2
 			self.CB += 1
-			#print self.CB,self.CS
 			return other + decimal.Decimal(tileSize2)
 			
-		elif (other < centre):
+		elif (other < centre): # And here the other is bigger
 			tileSize = difference2(other, centre)
 			tileSize1 = decimal.Decimal(other)-decimal.Decimal(centre)
 			tileSize2 = decimal.Decimal(tileSize1)/2
 			self.CS += 1
-			#print self.CS,self.CB
 			return centre + decimal.Decimal(tileSize2)
 		else:
 			return centre
@@ -139,7 +139,7 @@ class WorldLoader:
 			
 			rounded = round(actual)
 			
-			print str(current)+"  ",actual,rounded
+			# print str(current)+"  ",actual,rounded
 			
 			if task(actual, rounded) == True:
 				self.edgeR = True
@@ -148,8 +148,8 @@ class WorldLoader:
 		points = [] # A list containing a list of points for each square
 		self.CB = 0
 		self.CS = 0
-		def loadDaPoints(listLoad): # Works out what each corner 
-			squarePoints = [] # The points for each square
+		def loadDaPoints(listLoad): # Works out what each corner should be
+			squarePoints = [] # Getting the points back out of the list, this isn't perhaps the most efficient way, but it seemed to me to be the easiest way at the time.
 			centre = int(listLoad[0])
 			above = int(listLoad[1])
 			below = int(listLoad[2])
@@ -157,38 +157,29 @@ class WorldLoader:
 			right = int(listLoad[4])
 			
 			try:
-				previousTile = points[len(points)-1]
+				previousTile = points[len(points)-1] # If there is a previous tile. Lots of points from the squares that have already been done are used, for ease of making it smooth.
 			except:
-				previousTile = [centre, centre, centre, centre, centre, centre, centre]
+				previousTile = [centre, centre, centre, centre, centre, centre, centre] # Else the fictional square is the same height as the current one.
 				
-			try:
+			try: # If it exists
 				belowTile = points[len(points)-x]
 			except:
 				belowTile = [centre, centre, centre, centre, centre, centre, centre]
-			#print centre, above, below, left, right
 			
 			bottomCentre = self.difference(centre, below)
 			rightCentre = self.difference(centre, right)
 			topCentre = self.difference(centre, above)
 			leftCentre = self.difference(centre, left)
-			bottomLeft = previousTile[3]
-			#bottomLeft = self.otherDifference(leftCentre, bottomCentre)
-			bottomRight = belowTile[5]
+			bottomLeft = previousTile[1]
+			bottomRight = belowTile[2]
 			topRight = self.otherDifference(rightCentre, topCentre)
-			topLeft = previousTile[5]
+			topLeft = previousTile[2]
 			
-			#topLeft = self.otherDifference(leftCentre, topCentre)
-			
-			squarePoints.append(centre)
-			squarePoints.append(bottomLeft)
-			squarePoints.append(bottomCentre)
-			squarePoints.append(bottomRight)
-			squarePoints.append(rightCentre)
-			squarePoints.append(topRight)
-			squarePoints.append(topCentre)
-			squarePoints.append(topLeft)
-			squarePoints.append(leftCentre)
-			points.append(squarePoints)
+			squarePoints.append(bottomLeft) # 1
+			squarePoints.append(bottomRight) # 2
+			squarePoints.append(topRight) # 3
+			squarePoints.append(topLeft) # 4
+			points.append(squarePoints) # 5
 			
 		tempNo = 0
 		while(tempNo < len(HC)):

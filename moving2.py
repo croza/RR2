@@ -39,7 +39,7 @@ class HeightMoving(DirectObject):
 	def __init__(self, list):
 		self.title = addTitle("RR2, heightmap and pathing")
 		self.inst1 = addInstructions(0.95, "[ESC]: Quit")
-		self.inst2 = addInstructions(0.90, "[Space ]: Start Pathfinding (to the pointer")
+		self.inst2 = addInstructions(0.90, "[Space ]: Start Pathfinding (to the pointer)")
 		self.inst3 = addInstructions(0.85, "[Up/Right/Down/Left]: Move the arrow")
 	
 		self.switchState = True
@@ -152,8 +152,8 @@ class HeightMoving(DirectObject):
 	def loadWalls(self):
 		for tile in self.list:
 			if (tile.solid == True):
-				self.AIbehaviors.addStaticObstacle(tile.model)
-				print tile.model.getPos()
+				#self.AIbehaviors.addStaticObstacle(tile.model)
+				print 'p'
 		
 	def rounder(self, x, base = 2):
 		return int(base * round(float(x)/base))

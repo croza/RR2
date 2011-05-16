@@ -94,6 +94,9 @@ class Map:
 			
 		return heightMap
 		
+	def getMapWidth(self):
+		return self.width
+		
 	def generate_tile_array_old_format(self):
 		self.width = self.data_parser.getint("map", "width")
 		self.height = self.data_parser.getint("map", "height")

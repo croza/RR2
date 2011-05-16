@@ -203,7 +203,7 @@ class CameraHandler(DirectObject.DirectObject):
              
             if self.my > (1 - self.panZoneSize): 
                angleradiansX1 = base.camera.getH() * (math.pi / 180.0) 
-               panRate1 = (1 - self.my - self.panZoneSize) * (self.camDist / self.panRateDivisor) 
+               panRate1 = (1 - self.my - self.panZoneSize) * (self.camDist / self.panRateDivisor) * 2 
                moveY = True 
             if self.my < (-1 + self.panZoneSize): 
                angleradiansX1 = base.camera.getH() * (math.pi / 180.0)+math.pi 
@@ -211,7 +211,7 @@ class CameraHandler(DirectObject.DirectObject):
                moveY = True 
             if self.mx > (1 - self.panZoneSize): 
                angleradiansX2 = base.camera.getH() * (math.pi / 180.0)+math.pi*0.5 
-               panRate2 = (1 - self.mx - self.panZoneSize) * (self.camDist / self.panRateDivisor) 
+               panRate2 = (1 - self.mx - self.panZoneSize) * (self.camDist / self.panRateDivisor) * 2
                moveX = True 
             if self.mx < (-1 + self.panZoneSize): 
                angleradiansX2 = base.camera.getH() * (math.pi / 180.0)-math.pi*0.5 
