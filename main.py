@@ -9,11 +9,8 @@ import ConfigParser
 import StringIO
 
 from direct.showbase.DirectObject import DirectObject
-from pandac.PandaModules import AmbientLight, DirectionalLight
-from pandac.PandaModules import VBase4, VBase3
+from pandac.PandaModules import VBase4, VBase3, GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, GeomNode, NodePath, Geom, AmbientLight, DirectionalLight
 import direct.directbase.DirectStart
-
-from pandac.PandaModules import *
 
 class world(DirectObject):
 	def __init__(self, filename):
@@ -30,7 +27,6 @@ class world(DirectObject):
 		
 		mapsize = self.map.getMapWidth() # The width of the map
 		
-		print heightMap
 		w = wallTypes.WorldLoader(heightMap, mapsize).drawStuff(heightMap, mapsize) # Gets the height for the points of each square
 		ttiles = self.map.generate_tile_array() # The 'data' of all the squares in an array
 		tileNumber = 0
