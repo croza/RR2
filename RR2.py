@@ -1,11 +1,22 @@
-import config
-import stratCam
+import Parser
+import mapLoader
+import modelLoader
 import main
+import stratCam
 
-import moving2
+# class world:
+	# def __init__(self):
+config = Parser.config()
 
-startMap = config.parser.getpath("main", "testing_map") # CHECK THE CONFIG FOR THE STARTING MAP!
-world = main.world(startMap)
+list = mapLoader.mapLoader('data/maps/ten/').generate_tile_array(config)
+#print list, len(list)
+m = modelLoader.modelLoader(list)
+#print m.mapList[1][1].model
+
+l = main.world(m.mapList)
+
 stratCam.CameraHandler()
+
 run()
 
+#w = world()
