@@ -22,11 +22,11 @@ class config:
 		section2 = 0
 		
 		for option in self.mainConfig.options('wall_types'): # for each option in wall_types in the main.cfg
-			print option, self.mainConfig.get('wall_types', option)
+			# print option, self.mainConfig.get('wall_types', option)
 			
 			self.classes[int(option)] = wallClasses(self.loadWalls(self.wallConfig.items(self.mainConfig.get('wall_types', option))), self.mainConfig.get('wall_types', option)) # Makes a class for each wall type, and puts them into a list with the corresponding number
 
-		print self.classes # The long dictionary before the end of parser bit (below)
+		# print self.classes # The long dictionary before the end of parser bit (below)
 		print 'END OF PARSER!'
 		
 	def loadWalls(self, list1): # Takes the data from the config, and turns it into a useful dictionary, which is then converted into a class (see wallClasses)

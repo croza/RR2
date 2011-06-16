@@ -22,6 +22,8 @@ class mapLoader:
 		
 		#self.DATA = self.generate_tile_array()
 		
+		print 'END OF MAPLOADER!'
+		
 		## ALL MAPS ARE THE NEWEST FORMAT; to get to this format use the map converter (in tools) to convert maps made by Cyrem's map creator.
 			
 	def generate_tile_array(self, Parser): # Makes an array for the grid?
@@ -30,7 +32,7 @@ class mapLoader:
 		wall = open(self.mapDir+"maps/Surf.map", "r")
 
 		wallData = wall.read() # Turning the map file into a string
-		print wall.read()
+		# print wall.read()
 
 		if len(wallData) != (self.width*self.height):		# If the length of the array is not equal to height * width, raise error
 			print len(wallData), self.mapDir+"maps/Surf.map"
@@ -46,7 +48,6 @@ class mapLoader:
 			tilenum = tilenum+1 # Helps with maths (can't remeber how, but it does)
 			x, y = tilenum%self.width, tilenum//self.width
 			wallInt = wallData[tilenum-1]
-			#print 'hi', tilenum, wallInt
 			
 			if (tilenum == 0): # For only the first tile of the map (because otherwise everything is 1 char long)
 				row.append(Parser.classes[int(wallInt)])
@@ -59,7 +60,7 @@ class mapLoader:
 			elif (Xpos % self.width == 0): # If it is the end of the row
 				row.append(Parser.classes[int(wallInt)])
 				tiles.append(row)
-				print len(row)
+				# print len(row)
 				row = []
 			
 		return tiles # Returns a list with all the wall data in

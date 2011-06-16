@@ -13,13 +13,15 @@ class modelLoader:
 				tile.posY = tileY
 				tile.model.setPos(tile.posX,tile.posY,0)
 				tex=loader.loadTexture(tile.texture)
-				print tex
+				# print tex
 				tile.model.setTexture(tex, 1)
 				
 				tileX += 4
 				
 			tileX = 0
 			tileY += 4
+			
+		print 'END OF MODEL LOADER!'
 			
 	def makeModel(self, tileData):
 		def makeTile(tileData):
@@ -78,7 +80,7 @@ class modelLoader:
 			try:
 				geom.addPrimitive(solids) 
 			except:
-				print 'r'
+				print 'No  geom'
 			node = GeomNode("Solid") 
 			node.addGeom(geom)
 			
@@ -94,4 +96,5 @@ class modelLoader:
 		#print model
 		model.reparentTo(render)
 		model.flattenStrong()
+		
 		return model
