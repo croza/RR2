@@ -1,29 +1,30 @@
 from pandac.PandaModules import *
 
-class modelLoader:
-	def __init__(self, mapList):
+class modelLoader:	
+	def runOnceLoadModels(self, mapList):
 		self.mapList = mapList
 		tileX = 0
 		tileY = 0
-		for row in mapList:
-		
-			for tile in row:
-				tile.model = self.makeModel(tile)
+		for row in mapList: #Self explanitary
+			for tile in row: # For each tile in row, make a model, and position it
 				tile.posX = tileX
 				tile.posY = tileY
-				tile.model.setPos(tile.posX,tile.posY,0)
-				tex=loader.loadTexture(tile.texture)
-				# print tex
-				tile.model.setTexture(tex, 1)
 				
+				tile.model = self.makeModel(tile)
+				
+				tile.model.reparentTo(render)
+				tile.model.setPos(tile.posX,tile.posY,tile.posZ)
+				
+				tex=loader.loadTexture(tile.texture)
+				tile.model.setTexture(tex, 1)
 				tileX += 4
 				
 			tileX = 0
 			tileY += 4
 			
-		print 'END OF MODEL LOADER!'
+		return mapList
 			
-	def makeModel(self, tileData):
+	def makeModel(self, tileData): # The function to make a model
 		def makeTile(tileData):
 			format = GeomVertexFormat.getV3n3c4t2()
 			data = GeomVertexData("Data", format, Geom.UHStatic) 
@@ -81,20 +82,14 @@ class modelLoader:
 				geom.addPrimitive(solids) 
 			except:
 				print 'No  geom'
-			node = GeomNode("Solid") 
+			node = GeomNode("Solid at"+str(tileData.posX)+','+str(tileData.posY))
 			node.addGeom(geom)
 			
 			return NodePath(node)
-				
-			#return mapList
 			
 		if (tileData.solid == True):
 			model = makeTile(tileData)
 		else:
 			model = makeSolid(tileData)
-			
-		#print model
-		model.reparentTo(render)
-		model.flattenStrong()
 		
 		return model

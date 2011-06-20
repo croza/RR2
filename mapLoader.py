@@ -1,6 +1,9 @@
 import ConfigParser
 import StringIO
 
+import binascii
+import copy
+
 class mapLoader:
 	def __init__(self, mapDir):
 		self.mapDir = mapDir
@@ -20,23 +23,29 @@ class mapLoader:
 		self.name = self.data_parser.get("map", "name") # Map name
 		self.description = self.data_parser.get("map", "desc") # The description of the map
 		
-		#self.DATA = self.generate_tile_array()
-		
 		print 'END OF MAPLOADER!'
 		
 		## ALL MAPS ARE THE NEWEST FORMAT; to get to this format use the map converter (in tools) to convert maps made by Cyrem's map creator.
 			
-	def generate_tile_array(self, Parser): # Makes an array for the grid?
-		self.width = self.data_parser.getint("map", "width") # width of the map	(from the config)
+	def generate_tile_array(self, Parser): # The parser bit represent a dictionary containing the classes for the wall types
+		self.width = self.data_parser.getint("map", "width") # Width of the map	(from the config)
 		self.height = self.data_parser.getint("map", "height") # Height of the map
-		wall = open(self.mapDir+"maps/Surf.map", "r")
+		
+		mapFiles = []
+		
+		surf = open(self.mapDir+"maps/Surf.map", "r")
+		high = open(self.mapDir+"maps/High.map", "r")
 
-		wallData = wall.read() # Turning the map file into a string
+		wallData = surf.read() # Turning the map file into a string
+		mapFiles.append(wallData)
+		highData = high.read()
+		mapFiles.append(highData)
 		# print wall.read()
-
-		if len(wallData) != (self.width*self.height):		# If the length of the array is not equal to height * width, raise error
-			print len(wallData), self.mapDir+"maps/Surf.map"
-			raise ValueError, "Surf file has bad length"
+		
+		for mapFile in mapFiles:
+			if (len(mapFile) != (self.width*self.height)):
+				print len(mapFile), self.mapDir+"maps/%s" % (mapFile)
+				raise ValueError, "%s file has bad length" % (mapFile)
 
 		tiles = [] # A list of rows
 		row = [] # The data of each row
@@ -47,20 +56,36 @@ class mapLoader:
 		for tilenum in range(self.width*self.height): # For tilenum in range <size of map>. Makes a class for each square (see config) and puts this into a row, then that row into a larger list of rows.
 			tilenum = tilenum+1 # Helps with maths (can't remeber how, but it does)
 			x, y = tilenum%self.width, tilenum//self.width
-			wallInt = wallData[tilenum-1]
+			
+			wallStr = binascii.hexlify(wallData[tilenum-1]) # Converts the hex into a two character sting
+			wallInt = int('0x'+wallStr, 0) # Converts the string to an integer
+			
+			highStr = binascii.hexlify(highData[tilenum-1])
+			highInt = int('0x'+highStr, 0)
+			print highStr, highInt
 			
 			if (tilenum == 0): # For only the first tile of the map (because otherwise everything is 1 char long)
-				row.append(Parser.classes[int(wallInt)])
+				tempClass = copy.copy(Parser.classes[wallInt])
+				tempClass.posZ = highInt
+				
+				row.append(tempClass)
 				tilenum += 1
 				
 			elif (tilenum % self.width != 0): # If it ia not the end of the row
-				row.append(Parser.classes[int(wallInt)])
+				tempClass = copy.copy(Parser.classes[wallInt])
+				tempClass.posZ = highInt
+				
+				row.append(tempClass)
 				tilenum += 1
 				
 			elif (Xpos % self.width == 0): # If it is the end of the row
-				row.append(Parser.classes[int(wallInt)])
+				tempClass = copy.copy(Parser.classes[wallInt])
+				tempClass.posZ = highInt
+				
+				row.append(tempClass)
 				tiles.append(row)
 				# print len(row)
 				row = []
+				
 			
 		return tiles # Returns a list with all the wall data in
