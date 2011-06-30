@@ -1,2 +1,2 @@
-RR2.py
+python RR2.py
 pause

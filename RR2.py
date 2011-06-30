@@ -1,15 +1,23 @@
 import Parser
 import mapLoader
-import modelLoader
+#import modelLoader
+from pandac.PandaModules import *
 import main
 import stratCam
 
+
+
+#import libpandaexpress
+
 config = Parser.config()
+print config.units[0].model
 
-list = mapLoader.mapLoader('data/maps/ten/').generate_tile_array(config) # A big list of classes, one for each tile on the map (from classes mad in the parser)
+mapLoad = mapLoader.mapLoader('data/maps/ten/')
 
-#list = modelLoader.modelLoader(list, config.classes) # A more detailed list, with positions, height and rendered models attached
-l = main.world(list, config.classes) # The main
+list = mapLoad.generate_tile_array(config) # A big list of classes, one for each tile on the map (from classes mad in the parser)
+print mapLoad.height
+
+l = main.world(list, config.classes, mapLoad.width, mapLoad.height, config.units) # The main
 
 stratCam.CameraHandler() # The camera
 

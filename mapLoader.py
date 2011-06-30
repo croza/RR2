@@ -62,7 +62,6 @@ class mapLoader:
 			
 			highStr = binascii.hexlify(highData[tilenum-1])
 			highInt = int('0x'+highStr, 0)
-			print highStr, highInt
 			
 			if (tilenum == 0): # For only the first tile of the map (because otherwise everything is 1 char long)
 				tempClass = copy.copy(Parser.classes[wallInt])
@@ -84,7 +83,6 @@ class mapLoader:
 				
 				row.append(tempClass)
 				tiles.append(row)
-				# print len(row)
 				row = []
 				
 			

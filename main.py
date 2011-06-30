@@ -5,6 +5,7 @@ import direct.directbase.DirectStart
 from direct.gui.OnscreenText import OnscreenText
 
 import modelLoader
+#import unitHandler
 
 import copy
 import random
@@ -16,9 +17,15 @@ def addInstructions(pos, msg):
                         pos=(-1.3, pos), align=TextNode.ALeft, scale = .1)
 
 class world(DirectObject):
-	def __init__(self, list, wallClasses):
+	def __init__(self, list, wallClasses, mapX, mapY, unitDict):
 		self.wallClasses = wallClasses
-		self.list = modelLoader.modelLoader().runOnceLoadModels(list)
+		self.list = modelLoader.modelLoader().runOnceLoadModels(list, mapX)
+		
+		#g = unitHandler.makeAIWorld().AIWorld
+		##h = unitHandler.addNewModel().addNewModel(unitDict, 0, (5,5,10), g)
+		#h = unitHandler.addNewModel()
+		#h.addNewModel(unitDict, 0, (50,50,0), g)
+		#self.accept("enter", h.moveTo)
 		
 		self.loadLight()
 		
@@ -33,22 +40,26 @@ class world(DirectObject):
 		x = random.randint(0,9)
 		y = random.randint(0,9)
 		
-		self.list[x][y] = self.changeTile(self.list[x][y], self.wallClasses[random.randint(0,11)])
+		self.list[y][x] = self.changeTile(self.list[x][y], self.wallClasses[random.randint(0,11)])
 		
-	def changeTile(self, firstTile, finalTile):
+	def changeTile(self, firstTile, finalTile): # Transferes one tile's data to another sort of tile
 		firstTile.model.remove()
 		posX = firstTile.posX # Setting up values to be transferred to the next tile
 		posY = firstTile.posY
 		posZ = firstTile.posZ
+		cornerMap = firstTile.cornerMap
+		solidMap = firstTile.solidMap
 		
 		firstTile = copy.copy(finalTile)
 		firstTile.posX = posX
 		firstTile.posY = posY
 		firstTile.posZ = posZ
+		firstTile.cornerMap = cornerMap
+		firstTile.solidMap = solidMap
 		
 		firstTile.model = modelLoader.modelLoader().makeModel(firstTile) # From here on is reparenting and positioning the tile to the right place
 		firstTile.model.reparentTo(render)
-		firstTile.model.setPos(firstTile.posX,firstTile.posY,firstTile.posZ)
+		firstTile.model.setPos(firstTile.posX,firstTile.posY,0)
 		
 		tex=loader.loadTexture(firstTile.texture)
 		firstTile.model.setTexture(tex, 1)
