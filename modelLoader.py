@@ -4,8 +4,8 @@ class modelLoader:
 	def runOnceLoadModels(self, mapList, mapX): # Basically an __init__, but not run every time that this is called
 		self.mapList = mapList
 		tileNumber = 0
-		tileX = 0
-		tileY = 0
+		tileX = 2
+		tileY = 2
 		for row in mapList: # Self explanitary
 			for tile in row: # For each tile in row, make a model, and position it
 				tile.posX = tileX
@@ -17,6 +17,7 @@ class modelLoader:
 				tile.cornerMap = mapData[1]
 				
 				tile.model = self.makeModel(tile)
+				tile.model.setCollideMask(0x1)
 				
 				tile.model.reparentTo(render)
 				tile.model.setPos(tile.posX,tile.posY,0)#tile.posZ)
@@ -26,7 +27,7 @@ class modelLoader:
 				tileX += 4
 				tileNumber += 1
 				
-			tileX = 0
+			tileX = 2
 			tileY += 4
 			
 		return mapList
@@ -142,7 +143,7 @@ class modelLoader:
 				geom.addPrimitive(solids) 
 			except:
 				print 'No  geom'
-			node = GeomNode("Solid at"+str(tileData.posX)+','+str(tileData.posY))
+			node = GeomNode("Solid")
 			node.addGeom(geom)
 			
 			return NodePath(node)
