@@ -1,23 +1,17 @@
 import Parser
 import mapLoader
-from pandac.PandaModules import *
+import modelLoader
 import gameMain
 import stratCam
 
+parserClass = Parser.Parser()
 
+mapLoaderClass = mapLoader.mapLoader(parserClass)
 
-#import libpandaexpress
+modelLoaderClass = modelLoader.modelLoader(parserClass, mapLoaderClass)#, mapLoaderClass.mapConfigParser.get("map", "width"))
 
-config = Parser.config()
-print config.units[0].model
+gameMain = gameMain.world(parserClass, mapLoaderClass, modelLoaderClass)
 
-mapLoad = mapLoader.mapLoader('data/maps/ten/')
-
-list = mapLoad.generate_tile_array(config) # A big list of classes, one for each tile on the map (from classes mad in the parser)
-print mapLoad.height
-
-main = gameMain.world(list, config.classes, mapLoad.width, mapLoad.height, config.units) # The main
-
-stratCam.CameraHandler() # The camera
+stratCam.CameraHandler()
 
 run()
