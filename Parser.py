@@ -60,16 +60,11 @@ class Parser:
 			for option in self.unitConfig.options(section):
 				data[isNumber(option)] = isNumber(self.unitConfig.get(section, option))
 			self.unit[section] = unitClasses(data)
-			
-		print self.main
-		print self.user
-		print self.wall
-		print self.unit
+
 		print 'END OF PARSER.PY!'
 		
 class wallClasses: # Makes a class out of a dict
 	def __init__(self, dictionary):#, name):
-#		self.name = name
 		self.conductor = dictionary['conductor']
 		self.fullName = dictionary['fullname']
 		self.walkable = dictionary['walkable']
@@ -83,7 +78,6 @@ class wallClasses: # Makes a class out of a dict
 		
 class unitClasses:
 	def __init__(self, dictionary):#, name):
-#		self.name = name
 		self.fullName = dictionary['fullname']
 		self.HP = dictionary['hp']
 		self.info = dictionary['info']
@@ -95,5 +89,3 @@ class unitClasses:
 		self.digmulti = dictionary['digmulti']
 		self.reinforcemulti = dictionary['reinforcemulti']
 		self.shovelmulti = dictionary['shovelmulti']
-			
-#p = Parser()

@@ -31,23 +31,25 @@ from direct.task.Task import Task
 		
 
 class CameraHandler(DirectObject.DirectObject): 
-	def __init__(self): 
-
+	def __init__(self, mapWidth, mapHeight, scrollborder, zoomInSpeed, zoomOutSpeed, zoomMax, zoomMin): 
+		self.zoomMax = zoomMax
+		self.zoomMin = zoomMin
+		
 		base.disableMouse() 
 		# This disables the default mouse based camera control used by panda. This default control is awkward, and won't be used. 
 		
-		base.camera.setPos(0,20,10) 
+		base.camera.setPos(10,20,10) 
 		base.camera.lookAt(0,0,0) 
 		# Gives the camera an initial position and rotation. 
 		
-		self.mx,self.my=0,0 
+		self.mx,self.my = 0,0 
 		# Sets up variables for storing the mouse coordinates 
 		
-		self.orbiting=False 
+		self.orbiting = False 
 		# A boolean variable for specifying whether the camera is in orbiting mode. Orbiting mode refers to when the camera is being moved 
 		# because the user is holding down the right mouse button. 
 		
-		self.target=Vec3() 
+		self.target = Vec3() 
 		# sets up a vector variable for the camera's target. The target will be the coordinates that the camera is currently focusing on. 
 		
 		self.camDist = 20 
@@ -57,13 +59,13 @@ class CameraHandler(DirectObject.DirectObject):
 		# This variable is used as a divisor when calculating how far to move the camera when panning. Higher numbers will yield slower panning 
 		# and lower numbers will yield faster panning. This must not be set to 0. 
 		
-		self.panZoneSize = .2
+		self.panZoneSize = scrollborder
 		# This variable controls how close the mouse cursor needs to be to the edge of the screen to start panning the camera. It must be less than 1, 
 		# and I recommend keeping it less than .2 
 		
 		
-		self.panLimitsX = Vec2(-100, 100) 
-		self.panLimitsY = Vec2(-100, 100) 
+		self.panLimitsX = Vec2(0, 4*mapWidth) 
+		self.panLimitsY = Vec2(0, 4*mapHeight) 
 		# These two vairables will serve as limits for how far the camera can pan, so you don't scroll away from the map. 
 
 		self.setTarget(0,0,0) 
@@ -81,18 +83,18 @@ class CameraHandler(DirectObject.DirectObject):
 		
 		# The next pair of lines use lambda, which creates an on-the-spot one-shot function. 
 		
-		self.accept("wheel_up",lambda : self.adjustCamDist(0.9)) 
+		self.accept("wheel_up",lambda : self.adjustCamDist(zoomInSpeed)) 
 		# sets up the camera handler to detet when the mouse wheel is rolled upwards and uses a lambda function to call the 
 		# adjustCamDist function  with the argument 0.9 
 		
-		self.accept("wheel_down",lambda : self.adjustCamDist(1.1)) 
+		self.accept("wheel_down",lambda : self.adjustCamDist(zoomOutSpeed)) 
 		# sets up the camera handler to detet when the mouse wheel is rolled upwards and uses a lambda function to call the 
 		# adjustCamDist function  with the argument 1.1 
 		
 		taskMgr.add(self.camMoveTask,'camMoveTask') 
 		# sets the camMoveTask to be run every frame 
 			
-	def turnCameraAroundPoint(self,deltaX,deltaY): 
+	def turnCameraAroundPoint(self, deltaX, deltaY): 
 		# This function performs two important tasks. First, it is used for the camera orbital movement that occurs when the 
 		# right mouse button is held down. It is also called with 0s for the rotation inputs to reposition the camera during the 
 		# panning and zooming movements. 
@@ -131,7 +133,7 @@ class CameraHandler(DirectObject.DirectObject):
 		base.camera.lookAt(self.target.getX(),self.target.getY(),self.target.getZ() ) 
 		# Points the camera at the target location. 
 					
-	def setTarget(self,x,y,z): 
+	def setTarget(self, x, y, z): 
 		#This function is used to give the camera a new target position. 
 		x = self.clamp(x, self.panLimitsX.getX(), self.panLimitsX.getY()) 
 		self.target.setX(x) 
@@ -140,7 +142,7 @@ class CameraHandler(DirectObject.DirectObject):
 		self.target.setZ(z) 
 		# Stores the new target position values in the target variable. The x and y values are clamped to the pan limits. 
 		
-	def setPanLimits(self,xMin, xMax, yMin, yMax): 
+	def setPanLimits(self, xMin, xMax, yMin, yMax): 
 		# This function is used to set the limitations of the panning movement. 
 		
 		self.panLimitsX = (xMin, xMax) 
@@ -170,18 +172,24 @@ class CameraHandler(DirectObject.DirectObject):
 		self.orbiting=False 
 		# Sets the orbiting variable to false to designate orbiting mode as off. 
 		
-	def adjustCamDist(self,distFactor): 
+	def adjustCamDist(self, distFactor): 
 		# This function increases or decreases the distance between the camera and the target position to simulate zooming in and out. 
 		# The distFactor input controls the amount of camera movement. 
 			# For example, inputing 0.9 will set the camera to 90% of it's previous distance. 
 		
 		self.camDist=self.camDist*distFactor 
+		
+		if (self.camDist >= self.zoomMax):
+			self.camDist = self.zoomMax
+		elif (self.camDist <= self.zoomMin):
+			self.camDist = self.zoomMin
+
 		# Sets the new distance into self.camDist. 
 		
 		self.turnCameraAroundPoint(0,0) 
 		# Calls turnCameraAroundPoint with 0s for the rotation to reset the camera to the new position. 
 		
-	def camMoveTask(self,task): 
+	def camMoveTask(self, task): 
 		# This task is the camera handler's work house. It's set to be called every frame and will control both orbiting and panning the camera. 
 		
 		if base.mouseWatcherNode.hasMouse(): 
@@ -252,9 +260,3 @@ class CameraHandler(DirectObject.DirectObject):
 			# The old mouse positions are updated to the current mouse position as the final step. 
 		
 		return task.cont
-		
-		
-#####
-
-#	def setCameraHeight(self):
-#		

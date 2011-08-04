@@ -1,8 +1,7 @@
 from pandac.PandaModules import *
+from direct.showbase.DirectObject import DirectObject
 
-import copy
-
-class modelLoader:	
+class modelLoader(DirectObject):	
 	def __init__(self, parserClass, mapLoaderClass): # Basically an __init__, but not run every time that this is called
 #		self.mapList = mapList
 		self.mapX = mapLoaderClass.mapConfigParser.getint("map", "width")
@@ -22,43 +21,80 @@ class modelLoader:
 				tile.cornerMap = mapData[1]
 				
 				tile.model = self.makeModel(tile)
+					
 				tile.model.setCollideMask(0x1)
-				
+					
 				tile.model.reparentTo(render)
 				tile.model.setPos(tile.posX,tile.posY,0)#tile.posZ)
-				
+					
 				tex=loader.loadTexture(tile.texture)
 				tile.model.setTexture(tex, 1)
+					
+					
 				tileX += 4
 				tileNumber += 1
 				
 			tileX = 2
 			tileY += 4
 			
-#		return mapList
+	def reloadSurroundings(self, parserClass, mapLoaderClass, tileChanged):
+		aroundInfo = []
+		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4-1][tileChanged.posX/4-1])
+		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4-1][tileChanged.posX/4])
+		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4-1][tileChanged.posX/4+1])
 		
-
+		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4][tileChanged.posX/4-1])
+		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4][tileChanged.posX/4+1])
+		
+		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4+1][tileChanged.posX/4-1])
+		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4+1][tileChanged.posX/4])
+		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4+1][tileChanged.posX/4+1])
+		
+		for around in aroundInfo:
+			around.solidMap = self.reloadSolidMap(mapLoaderClass, around.posX/4, around.posY/4)
+			around.model.detachNode()
+			
+			around.model = self.makeModel(around)
+			around.model.setCollideMask(0x01)
+			
+			around.model.reparentTo(render)
+			around.model.setPos(around.posX, around.posY, 0)
+			
+			tex = loader.loadTexture(around.texture)
+			around.model.setTexture(tex, 1)
 				
 	def reloadSolidMap(self, mapLoaderClass, tileX, tileY):
-		def try1(xToTry, yToTry, currentX, currentY): # Tries the tile to see if it exists, and if it does returns the tile, else it returns the current tile
-#			print xToTry, yToTry, currentX, currentY
-			try:
-				returnTile = mapLoaderClass.tileArray[yToTry][xToTry]
-			except:
-				returnTile = mapLoaderClass.tileArray[currentY][currentX]
-			return returnTile.solid
-			
 		solidMap = []
 		
-		bottomLeft = try1(tileX-1, tileY-1, tileX, tileY)
-		bottomCentre = try1(tileX, tileY-1, tileX, tileY)
-		bottomRight = try1(tileX+1, tileY-1, tileX, tileY)
-		left = try1(tileX-1, tileY, tileX, tileY)
-		current = mapLoaderClass.tileArray[tileY][tileX]
-		right = try1(tileX+1, tileY, tileX, tileY)
-		topLeft = try1(tileX-1, tileY+1, tileX, tileY)
-		topCentre = try1(tileX, tileY+1, tileX, tileY)
-		topRight = try1(tileX+1, tileY+1, tileX, tileY)
+		yBehind = tileY - 1
+		yInfront = tileY +1
+		
+		xBehind = tileX - 1
+		xInfront = tileX + 1
+		
+		if (yInfront >= self.mapY-1):
+			yInfront = self.mapY-1
+			
+		if (yBehind <= 0):
+			yBehind = 0
+			
+		if (xInfront >= self.mapX-1):
+			xInfront = self.mapX-1
+			
+		if (xBehind <= 0):
+			xBehind = 0
+		
+		bottomLeft = mapLoaderClass.tileArray[yBehind][xBehind].solid
+		bottomCentre = mapLoaderClass.tileArray[yBehind][tileX].solid
+		bottomRight = mapLoaderClass.tileArray[yBehind][xInfront].solid
+		
+		left = mapLoaderClass.tileArray[tileY][xBehind].solid
+		current = mapLoaderClass.tileArray[tileY][tileX].solid
+		right = mapLoaderClass.tileArray[tileY][xInfront].solid
+		
+		topLeft = mapLoaderClass.tileArray[yInfront][xBehind].solid
+		topCentre = mapLoaderClass.tileArray[yInfront][tileX].solid
+		topRight = mapLoaderClass.tileArray[yInfront][xInfront].solid
 		
 		solidMap.append(bottomLeft)#.solid)
 		solidMap.append(bottomCentre)#.solid)
@@ -74,7 +110,6 @@ class modelLoader:
 	
 	def loadSurroundings(self, mapLoaderClass, tileX, tileY): # Returns a list of the surrounding slids
 		def try1(xToTry, yToTry, currentX, currentY): # Tries the tile to see if it exists, and if it does returns the tile, else it returns the current tile
-#			print xToTry, yToTry, currentX, currentY
 			try:
 				returnTile = mapLoaderClass.tileArray[yToTry][xToTry]
 			except:
@@ -102,15 +137,15 @@ class modelLoader:
 		topCentre = try1(tileX, tileY+1, tileX, tileY)
 		topRight = try1(tileX+1, tileY+1, tileX, tileY)
 		
-		surroundMap.append(bottomLeft.solid)
-		surroundMap.append(bottomCentre.solid)
-		surroundMap.append(bottomRight.solid)
-		surroundMap.append(left.solid)
-		surroundMap.append(current.solid)
-		surroundMap.append(right.solid)
-		surroundMap.append(topLeft.solid)
-		surroundMap.append(topCentre.solid)
-		surroundMap.append(topRight.solid)
+		surroundMap.append(bottomLeft.solid) # 0
+		surroundMap.append(bottomCentre.solid) # 1
+		surroundMap.append(bottomRight.solid) # 2
+		surroundMap.append(left.solid) # 3
+		surroundMap.append(current.solid) # 4
+		surroundMap.append(right.solid) # 5
+		surroundMap.append(topLeft.solid) # 6
+		surroundMap.append(topCentre.solid) # 7
+		surroundMap.append(topRight.solid) # 8
 		
 		heightMap.append(bottomLeft.posZ)
 		heightMap.append(bottomCentre.posZ)
@@ -154,6 +189,8 @@ class modelLoader:
 			geom.addPrimitive(triangles) 
 			node = GeomNode("Tile") 
 			node.addGeom(geom)
+			
+			tileData.modelName = 'flat'
 			
 			return NodePath(node) 
 			
@@ -227,15 +264,6 @@ class modelLoader:
 			texcoord3 = GeomVertexWriter(data, 'texcoord')
 			
 			solids = GeomTriangles(Geom.UHStatic)
-		
-			# vertices3.addData3f(-2, -2, tileData.cornerMap[0]) # 0
-			# texcoord3.addData2f(0,0)
-			# vertices3.addData3f(2, -2, tileData.cornerMap[1]) # 1
-			# texcoord3.addData2f(1,0)
-			# vertices3.addData3f(2, 2, tileData.cornerMap[2]) # 2
-			# texcoord3.addData2f(1,1)
-			# vertices3.addData3f(-2, 2, tileData.cornerMap[3]) # 3
-			# texcoord3.addData2f(0,1)
 			
 			vertex0 = (-2, -2, tileData.cornerMap[0]) # 0 Bottom Left
 			vertex1 = (-2, -2, tileData.cornerMap[0]+4) # 1 Upper Bottom Left
@@ -251,59 +279,72 @@ class modelLoader:
 			tileData.solidMap[5] == True and tileData.solidMap[6] == True and
 			tileData.solidMap[7] == True and tileData.solidMap[8] == True): # If all the surroundings are solids
 				makeFlat(vertex1, vertex3, vertex5, vertex7)
+				tileData.modelName = 'roof'
 				
 			elif (tileData.solidMap[1] == True and tileData.solidMap[3] == True and
 			tileData.solidMap[5] == True and tileData.solidMap[7] == False): # A sloped tile facing north
 				makeSlant(vertex4, vertex6, vertex1, vertex3)
+				tileData.modelName = 'slope north'
 				
 			elif (tileData.solidMap[1] == True and tileData.solidMap[3] == False and
 			tileData.solidMap[5] == True and tileData.solidMap[7] == True): # A sloped tile facing west
 				makeSlant(vertex6, vertex0, vertex3, vertex5)
+				tileData.modelName = 'slope west'
 				
 			elif (tileData.solidMap[1] == False and tileData.solidMap[3] == True and
 			tileData.solidMap[5] == True and tileData.solidMap[7] == True): # A sloped tile facing south
 				makeSlant(vertex0, vertex2, vertex5, vertex7)
+				tileData.modelName = 'slope south'
 				
 			elif (tileData.solidMap[1] == True and tileData.solidMap[3] == True and
 			tileData.solidMap[5] == False and tileData.solidMap[7] == True): # A sloped tile facing east
 				makeSlant(vertex2, vertex4, vertex7, vertex1)
+				tileData.modelName = 'slope east'
 			
 			elif (tileData.solidMap[1] == False and tileData.solidMap[3] == False and
 			tileData.solidMap[5] == True and tileData.solidMap[7] == True): # A corner with solids north, and east
 				makeCorner(vertex5, vertex5, vertex6, vertex0, vertex2)
+				tileData.modelName = 'corner1 north, east'
 				
 			elif (tileData.solidMap[1] == False and tileData.solidMap[3] == True and
 			tileData.solidMap[5] == False and tileData.solidMap[7] == True): # A corner with solids north, and west
 				makeCorner(vertex7, vertex7, vertex0, vertex2, vertex4)
+				tileData.modelName = 'corner1 north, west'
 				
 			elif (tileData.solidMap[1] == True and tileData.solidMap[3] == True and
 			tileData.solidMap[5] == False and tileData.solidMap[7] == False): # A corner with solids south, and west
 				makeCorner(vertex1, vertex1, vertex2, vertex4, vertex6)
+				tileData.modelName = 'corner1 south, west'
 				
 			elif (tileData.solidMap[1] == True and tileData.solidMap[3] == False and
 			tileData.solidMap[5] == True and tileData.solidMap[7] == False): # A corner with solids south, and east
 				makeCorner(vertex3, vertex3, vertex4, vertex6, vertex0)
+				tileData.modelName = 'corner1 south, east'
 				
 			elif (tileData.solidMap[5] == True and tileData.solidMap[7] == True and
 			tileData.solidMap[8] == False): # Another corner north and east
 				makeOtherCorner(vertex1, vertex1, vertex3, vertex4, vertex4, vertex7)
+				tileData.modelName = 'corner2 north, east'
 			
 			elif (tileData.solidMap[3] == True and tileData.solidMap[6] == False and
 			tileData.solidMap[7] == True): # Another corner north and west
 				makeOtherCorner(vertex3, vertex3, vertex5, vertex6, vertex6, vertex1)
+				tileData.modelName = 'corner2 north, west'
 				
 			elif (tileData.solidMap[0] == False and tileData.solidMap[1] == True and
 			tileData.solidMap[3] == True): # Another corner south and west
 				makeOtherCorner(vertex5, vertex5, vertex7, vertex0, vertex0, vertex3)
+				tileData.modelName = 'corner2 south, west'
 				
 			elif (tileData.solidMap[1] == True and tileData.solidMap[2] == False and
 			tileData.solidMap[5] == True): # Another corner south and east
 				makeOtherCorner(vertex7, vertex7, vertex1, vertex2, vertex2, vertex5)
+				tileData.modelName = 'corner2 south, east'
 				
-			# solids.addVertices(0, 1, 3) # The most left triangle
-			# solids.addVertices(1, 2, 3)
-			# solids.closePrimitive()
-			
+			else:
+				makeFlat(vertex0, vertex2, vertex4, vertex6)
+				tileData.modelName = 'none'
+				
 			geom = Geom(data) 
 			try:
 				geom.addPrimitive(solids) 
@@ -317,7 +358,6 @@ class modelLoader:
 		if (tileData.solid == True):
 			model = makeSolid(tileData)
 		else:
-			print tileData.solid
 			model = makeTile(tileData)
 		
 		return model

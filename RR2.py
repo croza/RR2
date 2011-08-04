@@ -12,6 +12,11 @@ modelLoaderClass = modelLoader.modelLoader(parserClass, mapLoaderClass)#, mapLoa
 
 gameMain = gameMain.world(parserClass, mapLoaderClass, modelLoaderClass)
 
-stratCam.CameraHandler()
+stratCam.CameraHandler(modelLoaderClass.mapX, modelLoaderClass.mapY,
+		parserClass.userConfig.getfloat("control", "scrollborder"),
+		parserClass.userConfig.getfloat("control", "zoominspeed"),
+		parserClass.userConfig.getfloat("control", "zoomoutspeed"),
+		parserClass.userConfig.getfloat("control", "zoommax"),
+		parserClass.userConfig.getfloat("control", "zoommin"))
 
 run()
