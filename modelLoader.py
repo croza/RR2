@@ -147,15 +147,15 @@ class modelLoader(DirectObject):
 		surroundMap.append(topCentre.solid) # 7
 		surroundMap.append(topRight.solid) # 8
 		
-		heightMap.append(bottomLeft.posZ)
-		heightMap.append(bottomCentre.posZ)
-		heightMap.append(bottomRight.posZ)
-		heightMap.append(left.posZ)
-		heightMap.append(current.posZ)
-		heightMap.append(right.posZ)
-		heightMap.append(topLeft.posZ)
-		heightMap.append(topCentre.posZ)
-		heightMap.append(topRight.posZ)
+		heightMap.append(bottomLeft.posZ/2)
+		heightMap.append(bottomCentre.posZ/2)
+		heightMap.append(bottomRight.posZ/2)
+		heightMap.append(left.posZ/2)
+		heightMap.append(current.posZ/2)
+		heightMap.append(right.posZ/2)
+		heightMap.append(topLeft.posZ/2)
+		heightMap.append(topCentre.posZ/2)
+		heightMap.append(topRight.posZ/2)
 		
 		cornerMap = makeCornerMap(heightMap)
 		
@@ -187,10 +187,10 @@ class modelLoader(DirectObject):
 			geom = Geom(data) 
 
 			geom.addPrimitive(triangles) 
-			node = GeomNode("Tile") 
+			node = GeomNode("tile") 
 			node.addGeom(geom)
 			
-			tileData.modelName = 'flat'
+			tileData.modelName = 'tile'
 			
 			return NodePath(node) 
 			
@@ -224,38 +224,53 @@ class modelLoader(DirectObject):
 				solids.closePrimitive()
 				
 			def makeCorner( v0, v1, v2, v3, v4):
-				vertices3.addData3f(v0)
-				texcoord3.addData2f(1, 1)
-				vertices3.addData3f(v1)
-				texcoord3.addData2f(1, 1)
-				vertices3.addData3f(v2) 
+				vertices3.addData3f(v0) # 0
 				texcoord3.addData2f(0, 1)
-				vertices3.addData3f(v3) 
+				vertices3.addData3f(v1) # 1
+				texcoord3.addData2f(1, 1)
+				vertices3.addData3f(v2) # 2
 				texcoord3.addData2f(0, 0)
-				vertices3.addData3f(v4) 
+				vertices3.addData3f(v3) # 3
+				texcoord3.addData2f(1, 0)
+				vertices3.addData3f(v3) # 4
+				texcoord3.addData2f(0, 0)
+				vertices3.addData3f(v4) # 5
 				texcoord3.addData2f(1, 0)
 				
 				solids.addVertices(0, 2, 3)
-				solids.addVertices(1, 3, 4)
+				solids.addVertices(1, 4, 5)
 				solids.closePrimitive()
 				
 			def makeOtherCorner(v0, v1, v2, v3, v4, v5):
 				vertices3.addData3f(v0)
 				texcoord3.addData2f(1, 1)
 				vertices3.addData3f(v1)
-				texcoord3.addData2f(1, 1)
+				texcoord3.addData2f(0, 1)
 				vertices3.addData3f(v2) 
 				texcoord3.addData2f(0, 1)
 				vertices3.addData3f(v3) 
 				texcoord3.addData2f(0, 0)
 				vertices3.addData3f(v4) 
-				texcoord3.addData2f(0, 0)
-				vertices3.addData3f(v5) 
 				texcoord3.addData2f(1, 0)
+				vertices3.addData3f(v5) 
+				texcoord3.addData2f(1, 1)
 				
 				solids.addVertices(0, 2, 3)
 				solids.addVertices(1, 4, 5)
 				solids.closePrimitive()
+				
+			x = tileData.posX/4
+			y = tileData.posY/4
+			
+			if (len(str(x)) == 1):
+				x = '0'+str(x)
+			else:
+				x = str(x)
+				
+			if (len(str(y)) == 1):
+				y = '0'+str(y)
+			else:
+				y = str(y)
 				
 			format = GeomVertexFormat.getV3n3c4t2()
 			data = GeomVertexData("Data", format, Geom.UHStatic) 
@@ -274,83 +289,140 @@ class modelLoader(DirectObject):
 			vertex6 = (-2, 2, tileData.cornerMap[3]) # 6 Top Left
 			vertex7 = (-2, 2, tileData.cornerMap[3]+4) # 7 Upper Top Left
 			
-			if (tileData.solidMap[0] == True and tileData.solidMap[1] == True and
-			tileData.solidMap[2] == True and tileData.solidMap[3] == True and
-			tileData.solidMap[5] == True and tileData.solidMap[6] == True and
-			tileData.solidMap[7] == True and tileData.solidMap[8] == True): # If all the surroundings are solids
+			if (tileData.solidMap[0] == True and 
+			tileData.solidMap[1] == True and 
+			tileData.solidMap[2] == True and 
+			tileData.solidMap[3] == True and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[6] == True and 
+			tileData.solidMap[7] == True and 
+			tileData.solidMap[8] == True): # If all the surroundings are solids
 				makeFlat(vertex1, vertex3, vertex5, vertex7)
-				tileData.modelName = 'roof'
-				
-			elif (tileData.solidMap[1] == True and tileData.solidMap[3] == True and
-			tileData.solidMap[5] == True and tileData.solidMap[7] == False): # A sloped tile facing north
-				makeSlant(vertex4, vertex6, vertex1, vertex3)
-				tileData.modelName = 'slope north'
-				
-			elif (tileData.solidMap[1] == True and tileData.solidMap[3] == False and
-			tileData.solidMap[5] == True and tileData.solidMap[7] == True): # A sloped tile facing west
-				makeSlant(vertex6, vertex0, vertex3, vertex5)
-				tileData.modelName = 'slope west'
-				
-			elif (tileData.solidMap[1] == False and tileData.solidMap[3] == True and
-			tileData.solidMap[5] == True and tileData.solidMap[7] == True): # A sloped tile facing south
-				makeSlant(vertex0, vertex2, vertex5, vertex7)
-				tileData.modelName = 'slope south'
-				
-			elif (tileData.solidMap[1] == True and tileData.solidMap[3] == True and
-			tileData.solidMap[5] == False and tileData.solidMap[7] == True): # A sloped tile facing east
-				makeSlant(vertex2, vertex4, vertex7, vertex1)
-				tileData.modelName = 'slope east'
+				tileData.modelName = 'solid roof '+x+', '+y
+				tileData.texture2 = 'data/models/world/textures/roof.png'
 			
-			elif (tileData.solidMap[1] == False and tileData.solidMap[3] == False and
-			tileData.solidMap[5] == True and tileData.solidMap[7] == True): # A corner with solids north, and east
+			elif (tileData.solidMap[0] == True and 
+			tileData.solidMap[1] == True and 
+			tileData.solidMap[2] == True and 
+			tileData.solidMap[3] == True and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[7] == False): # A sloped tile facing north
+				makeSlant(vertex4, vertex6, vertex1, vertex3)
+				tileData.modelName = 'solid slope north '+x+', '+y
+
+			elif (tileData.solidMap[1] == True and 
+			tileData.solidMap[2] == True and 
+			tileData.solidMap[3] == False and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[7] == True and
+			tileData.solidMap[8] == True): # A sloped tile facing west
+				makeSlant(vertex6, vertex0, vertex3, vertex5)
+				tileData.modelName = 'solid slope west '+x+', '+y
+				
+			elif (tileData.solidMap[1] == False and 
+			tileData.solidMap[3] == True and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[6] == True and 
+			tileData.solidMap[7] == True and 
+			tileData.solidMap[8] == True): # A sloped tile facing south
+				makeSlant(vertex0, vertex2, vertex5, vertex7)
+				tileData.modelName = 'solid slope south '+x+', '+y
+
+			elif (tileData.solidMap[0] == True and 
+			tileData.solidMap[1] == True and 
+			tileData.solidMap[3] == True and 
+			tileData.solidMap[5] == False and 
+			tileData.solidMap[6] == True and 
+			tileData.solidMap[7] == True): # A sloped tile facing east
+				makeSlant(vertex2, vertex4, vertex7, vertex1)
+				tileData.modelName = 'solid slope east '+x+', '+y
+
+			elif (tileData.solidMap[1] == False and 
+			tileData.solidMap[3] == False and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[7] == True and 
+			tileData.solidMap[8] == True): # A corner with solids north, and east
 				makeCorner(vertex5, vertex5, vertex6, vertex0, vertex2)
-				tileData.modelName = 'corner1 north, east'
-				
-			elif (tileData.solidMap[1] == False and tileData.solidMap[3] == True and
-			tileData.solidMap[5] == False and tileData.solidMap[7] == True): # A corner with solids north, and west
+				tileData.modelName = 'solid corner1 north, east '+x+', '+y
+			
+			elif (tileData.solidMap[1] == False and 
+			tileData.solidMap[3] == True and 
+			tileData.solidMap[5] == False and 
+			tileData.solidMap[6] == True and 
+			tileData.solidMap[7] == True): # A corner with solids north, and west
 				makeCorner(vertex7, vertex7, vertex0, vertex2, vertex4)
-				tileData.modelName = 'corner1 north, west'
+				tileData.modelName = 'solid corner1 north, west '+x+', '+y
 				
-			elif (tileData.solidMap[1] == True and tileData.solidMap[3] == True and
-			tileData.solidMap[5] == False and tileData.solidMap[7] == False): # A corner with solids south, and west
+			elif (tileData.solidMap[0] == True and 
+			tileData.solidMap[1] == True and 
+			tileData.solidMap[3] == True and 
+			tileData.solidMap[5] == False and 
+			tileData.solidMap[7] == False): # A corner with solids south, and west
 				makeCorner(vertex1, vertex1, vertex2, vertex4, vertex6)
-				tileData.modelName = 'corner1 south, west'
+				tileData.modelName = 'solid corner1 south, west '+x+', '+y
 				
-			elif (tileData.solidMap[1] == True and tileData.solidMap[3] == False and
-			tileData.solidMap[5] == True and tileData.solidMap[7] == False): # A corner with solids south, and east
+			elif (tileData.solidMap[1] == True and 
+			tileData.solidMap[2] == True and 
+			tileData.solidMap[3] == False and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[7] == False): # A corner with solids south, and east
 				makeCorner(vertex3, vertex3, vertex4, vertex6, vertex0)
-				tileData.modelName = 'corner1 south, east'
+				tileData.modelName = 'solid corner1 south, east '+x+', '+y
 				
-			elif (tileData.solidMap[5] == True and tileData.solidMap[7] == True and
+			elif (tileData.solidMap[0] == True and 
+			tileData.solidMap[1] == True and 
+			tileData.solidMap[2] == True and 
+			tileData.solidMap[3] == True and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[6] == True and 
+			tileData.solidMap[7] == True and
 			tileData.solidMap[8] == False): # Another corner north and east
 				makeOtherCorner(vertex1, vertex1, vertex3, vertex4, vertex4, vertex7)
-				tileData.modelName = 'corner2 north, east'
-			
-			elif (tileData.solidMap[3] == True and tileData.solidMap[6] == False and
-			tileData.solidMap[7] == True): # Another corner north and west
+				tileData.modelName = 'solid corner2 north, east '+x+', '+y
+
+			elif (tileData.solidMap[0] == True and 
+			tileData.solidMap[1] == True and 
+			tileData.solidMap[2] == True and 
+			tileData.solidMap[3] == True and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[6] == False and 
+			tileData.solidMap[7] == True and
+			tileData.solidMap[8] == True): # Another corner north and west
 				makeOtherCorner(vertex3, vertex3, vertex5, vertex6, vertex6, vertex1)
-				tileData.modelName = 'corner2 north, west'
-				
-			elif (tileData.solidMap[0] == False and tileData.solidMap[1] == True and
-			tileData.solidMap[3] == True): # Another corner south and west
+				tileData.modelName = 'solid corner2 north, west '+x+', '+y
+			
+			elif (tileData.solidMap[0] == False and 
+			tileData.solidMap[1] == True and 
+			tileData.solidMap[2] == True and 
+			tileData.solidMap[3] == True and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[6] == True and 
+			tileData.solidMap[7] == True and
+			tileData.solidMap[8] == True): # Another corner south and west
 				makeOtherCorner(vertex5, vertex5, vertex7, vertex0, vertex0, vertex3)
-				tileData.modelName = 'corner2 south, west'
+				tileData.modelName = 'solid corner2 south, west '+x+', '+y
 				
-			elif (tileData.solidMap[1] == True and tileData.solidMap[2] == False and
-			tileData.solidMap[5] == True): # Another corner south and east
+			elif (tileData.solidMap[0] == True and 
+			tileData.solidMap[1] == True and 
+			tileData.solidMap[2] == False and 
+			tileData.solidMap[3] == True and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[6] == True and 
+			tileData.solidMap[7] == True and
+			tileData.solidMap[8] == True): # Another corner south and east
 				makeOtherCorner(vertex7, vertex7, vertex1, vertex2, vertex2, vertex5)
-				tileData.modelName = 'corner2 south, east'
+				tileData.modelName = 'solid corner2 south, east '+x+', '+y
 				
 			else:
 				makeFlat(vertex0, vertex2, vertex4, vertex6)
-				tileData.modelName = 'none'
+				tileData.modelName = 'none '+x+', '+y
 				
 			geom = Geom(data) 
 			try:
 				geom.addPrimitive(solids) 
 			except:
 				print 'No  geom'
-			node = GeomNode("Solid")
+			node = GeomNode(tileData.modelName)
 			node.addGeom(geom)
 			
 			return NodePath(node)

@@ -14,8 +14,8 @@ X = int(raw_input("Please enter the width of the map (note that it is one more t
 Y = int(raw_input("Please enter the height of the map (same as with the width, one more than what you think it is: "))
 
 #mapFiles = ['Cror.map', 'Dugg.map', 'Emrg.map', 'Erod.map', 'Fall.map', 'High.map', 'Path.map', 'Surf.map', 'Tuto.map']
-mapFiles = ['Surf.map']
-otherFiles = ['ObjectList.ol']
+mapFiles = ['Surf.map', 'High.map']
+#otherFiles = ['ObjectList.ol']
 
 def ifExist(file2):
 	if (os.path.exists(directory+file2) == True):
@@ -36,10 +36,10 @@ def clipFile(file2):
 	tempFile = open(directory+file2)
 	tempData = tempFile.read()
 
-	if (len(tempData) != 2*(X*Y)+16):
-		raise "This file has a bad length."
+#	if (len(tempData) != 2*(X*Y)+16):
+#		raise "This file has a bad length."
 	
-	tempData = tempData[16:]
+	tempData = tempData[14:]
 	tempData = tempData[:len(tempData)-(2*X)]
 	#print tempData.encode("hex")
 	

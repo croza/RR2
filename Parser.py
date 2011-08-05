@@ -29,6 +29,8 @@ class Parser:
 					return True
 				elif (number.capitalize() == 'No'):
 					return False
+				elif (number.capitalize() == 'None'):
+					return None
 				else:
 					return number
 				

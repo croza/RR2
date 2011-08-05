@@ -4,6 +4,8 @@ import direct.directbase.DirectStart
 from direct.gui.OnscreenText import OnscreenText
 from direct.task.Task import Task
 
+from direct.interval.IntervalGlobal import *
+
 import modelLoader
 import unitHandler
 
@@ -26,6 +28,7 @@ class world(DirectObject):
 		
 		self.accept("escape", sys.exit)
 		self.accept("s", self.randomChange, [parserClass, mapLoaderClass, modelLoaderClass])
+		
 		
 		print 'END OF GAMEMAIN.PY!'
 		
@@ -61,16 +64,24 @@ class world(DirectObject):
 					(tile.solidMap[1] == False and
 					tile.solidMap[3] == True and
 					tile.solidMap[5] == True and
-					tile.solidMap[7] == False)):
+					tile.solidMap[7] == False) or
+					
+					(tile.modelName[0:5] == 'none')):
 						self.changeTile(tile, 0, parserClass, modelLoaderClass, mapLoaderClass)
-						
 		return Task.cont
 		
 	def randomChange(self, parserClass, mapLoaderClass, modelLoaderClass):
-		x = random.randint(3,7)
-		y = random.randint(3,7)
-
-		self.changeTile(mapLoaderClass.tileArray[y][x], random.randint(0,1), parserClass, modelLoaderClass, mapLoaderClass)
+		x = random.randint(1,8)
+		y = random.randint(1,8)
+		
+#		seq = Sequence()
+#		seq.append(Func(mapLoaderClass.tileArray[y][x].model.setColor, (0,1,0,1)))
+#		seq.append(Wait(1))
+#		seq.append(Func(self.changeTile, mapLoaderClass.tileArray[y][x], 1, parserClass, modelLoaderClass, mapLoaderClass))
+		
+#		seq.start()
+		
+		mapLoaderClass.tileArray[y][x] = self.changeTile(mapLoaderClass.tileArray[y][x], random.randint(0,1), parserClass, modelLoaderClass, mapLoaderClass)
 		
 	def changeTile(self, firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass):
 		def changer(firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass):
@@ -98,12 +109,14 @@ class world(DirectObject):
 			finalTile.solidMap = solidMap
 			
 			finalTile.model = modelLoaderClass.makeModel(finalTile)#, mapLoaderClass) # From here on is reparenting and positioning the tile to the right place
-				
+
 			finalTile.model.reparentTo(render)
 			finalTile.model.setPos(finalTile.posX, finalTile.posY, 0)
-		
-			tex=loader.loadTexture(finalTile.texture)
+			finalTile.model.setCollideMask(0x1)
+			
+			tex = loader.loadTexture(finalTile.texture)
 			finalTile.model.setTexture(tex, 1)
+			
 			
 			return finalTile
 			
@@ -155,7 +168,7 @@ class world(DirectObject):
 			
 			around.model.reparentTo(render)
 			around.model.setPos(around.posX, around.posY, 0)
-			
+
 			tex = loader.loadTexture(around.texture)
 			around.model.setTexture(tex, 1)
 		
