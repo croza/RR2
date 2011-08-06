@@ -1,4 +1,4 @@
-# With a lot of help from scripts by pandai
+# With a lot of help from scripts by the  pandai team
 
 import direct.directbase.DirectStart
 from pandac.PandaModules import CollisionTraverser, CollisionNode
@@ -11,11 +11,13 @@ from direct.task.Task import Task
 from direct.showbase.DirectObject import DirectObject
 import random, sys, os, math
 
-from direct.interval.IntervalGlobal import *
+from direct.stdpy.threading import Timer
 
 class thirdPerson(DirectObject):
 	def __init__(self, parserClass, mainClass, mapLoaderClass, modelLoaderClass):
 		self.switchState = False
+		
+		#self.t = Timer()
 		
 		self.keyMap = {"left":0, "right":0, "forward":0, "backward":0}
 		self.ralph = Actor("data/models/units/ralph/ralph",
@@ -23,6 +25,7 @@ class thirdPerson(DirectObject):
 								"walk":"data/models/units/ralph/ralph-walk"})
 		self.ralph.reparentTo(render)
 		self.ralph.setPos(42, 30, 0)
+#		self.ralph.setPos(6, 10, 0)
 		self.ralph.setScale(0.1)
 		
 		self.accept("escape", sys.exit)
@@ -59,12 +62,12 @@ class thirdPerson(DirectObject):
 		base.cam.lookAt(self.floater2)
 
 		# Uncomment this line to see the collision rays
-		self.ralphGroundColNp.show()
+#		self.ralphGroundColNp.show()
 #		self.camGroundColNp.show()
 	   
 		#Uncomment this line to show a visual representation of the 
 		#collisions occuring
-		self.cTrav.showCollisions(render)
+#		self.cTrav.showCollisions(render)
 		
 		self.floater = NodePath(PandaNode("floater"))
 		self.floater.reparentTo(render)
@@ -92,9 +95,9 @@ class thirdPerson(DirectObject):
 		if (self.keyMap["right"] != 0):
 			self.ralph.setH(self.ralph.getH() - elapsed*300)
 		if (self.keyMap["forward"] != 0):
-			self.ralph.setY(self.ralph, -(elapsed*25))
+			self.ralph.setY(self.ralph, -(elapsed*50))#25))
 		if (self.keyMap["backward"] != 0):
-			self.ralph.setY(self.ralph, +(elapsed*10))
+			self.ralph.setY(self.ralph, +(elapsed*20))
 			
 		if (self.keyMap["forward"] != 0) or (self.keyMap["left"] != 0) or (self.keyMap["right"] != 0):
 			if self.isMoving is False:
@@ -128,12 +131,7 @@ class thirdPerson(DirectObject):
 		entries.sort(lambda x,y: cmp(y.getSurfacePoint(render).getZ(),
 									 x.getSurfacePoint(render).getZ()))	
 		
-#		if (len(entries)>0):
-#			print entries[0].getIntoNode().getName()[0:4]
-		
 		if (len(entries)>0) and (entries[0].getIntoNode().getName()[0:4] == "tile"):
-			self.something = False
-			self.isMining = False
 			self.ralph.setZ(entries[0].getSurfacePoint(render).getZ())
 			
 		elif (len(entries)>0) and (entries[0].getIntoNode().getName()[0:5] == "solid"):

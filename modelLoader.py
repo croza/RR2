@@ -27,6 +27,8 @@ class modelLoader(DirectObject):
 				tile.model.reparentTo(render)
 				tile.model.setPos(tile.posX,tile.posY,0)#tile.posZ)
 					
+#				tile.model.flattenStrong()
+				
 				tex=loader.loadTexture(tile.texture)
 				tile.model.setTexture(tex, 1)
 					
@@ -163,6 +165,18 @@ class modelLoader(DirectObject):
 			
 	def makeModel(self, tileData): # The function to make a model
 		def makeTile(tileData):
+			x = tileData.posX/4
+			y = tileData.posY/4
+			
+			if (len(str(x)) == 1):
+				x = '0'+str(x)
+			else:
+				x = str(x)
+				
+			if (len(str(y)) == 1):
+				y = '0'+str(y)
+			else:
+				y = str(y)
 			format = GeomVertexFormat.getV3n3c4t2()
 			data = GeomVertexData("Data", format, Geom.UHStatic) 
 			
@@ -187,10 +201,18 @@ class modelLoader(DirectObject):
 			geom = Geom(data) 
 
 			geom.addPrimitive(triangles) 
-			node = GeomNode("tile") 
+			
+			if (tileData.water == True):
+				tileData.modelName = 'water '+x+', '+y
+			elif (tileData.lava == True):
+				tileData.modelName = 'lava '+x+', '+y
+			else:
+				tileData.modelName = 'tile '+x+', '+y
+			
+			node = GeomNode(tileData.modelName) 
 			node.addGeom(geom)
 			
-			tileData.modelName = 'tile'
+#			tileData.modelName = 'tile'
 			
 			return NodePath(node) 
 			
@@ -413,9 +435,17 @@ class modelLoader(DirectObject):
 				makeOtherCorner(vertex7, vertex7, vertex1, vertex2, vertex2, vertex5)
 				tileData.modelName = 'solid corner2 south, east '+x+', '+y
 				
+			elif (tileData.solidMap[1] == False and 
+			tileData.solidMap[3] == False and 
+			tileData.solidMap[5] == True and 
+			tileData.solidMap[7] == True and 
+			tileData.solidMap[8] == True): # A corner with solids north, and east
+				makeCorner(vertex5, vertex5, vertex6, vertex0, vertex2)
+				tileData.modelName = 'solid corner1 north, east '+x+', '+y
+			
 			else:
 				makeFlat(vertex0, vertex2, vertex4, vertex6)
-				tileData.modelName = 'none '+x+', '+y
+				tileData.modelName = 'solid shouldn\'t work '+x+', '+y
 				
 			geom = Geom(data) 
 			try:
