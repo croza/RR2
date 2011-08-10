@@ -36,11 +36,17 @@ class mapLoader:
 		
 		surf = open(self.mapDir+"maps/Surf.map", "r")
 		high = open(self.mapDir+"maps/High.map", "r")
+		reda = open(self.mapDir+"maps/Reda.map", "r")
+		renu = open(self.mapDir+"maps/Renu.map", "r")
 
 		wallData = surf.read() # Turning the map file into a string
 		mapFiles.append(wallData)
 		highData = high.read()
 		mapFiles.append(highData)
+		redaData = reda.read()
+		mapFiles.append(redaData)
+		renuData = renu.read()
+		mapFiles.append(renuData)
 		
 		for mapFile in mapFiles:
 			if (len(mapFile) != (self.width*self.height)):
@@ -53,6 +59,7 @@ class mapLoader:
 		Ypos = 0
 		
 		for tilenum in range(self.width * self.height):
+			print tilenum
 			tilenum = tilenum +1 # Helps with maths (can't remeber how, but it does)
 			
 			wallStr = binascii.hexlify(wallData[tilenum-1]) # Converts the hex into a two character sting
@@ -61,9 +68,17 @@ class mapLoader:
 			highStr = binascii.hexlify(highData[tilenum-1]) # Same, but for the High.map file
 			highInt = int('0x'+highStr, 0)
 			
+			redaStr = binascii.hexlify(redaData[tilenum-1])
+			redaInt = int('0x'+redaStr, 0)
+			
+			renuStr = binascii.hexlify(renuData[tilenum-1])
+			renuInt = int('0x'+renuStr, 0)
+			
 			if (tilenum == 0): # For only the first tile of the map (because otherwise everything is 1 char long)
 				tempClass = copy.copy(ParserClass.wall[ParserClass.main['wall_types'][wallInt]])
 				tempClass.posZ = highInt
+				tempClass.reda = redaInt
+				tempClass.renu = renuInt
 				
 				row.append(tempClass)
 				tilenum += 1
@@ -71,6 +86,8 @@ class mapLoader:
 			elif (tilenum % self.width != 0): # If it is not the end of the row
 				tempClass = copy.copy(ParserClass.wall[ParserClass.main['wall_types'][wallInt]])
 				tempClass.posZ = highInt
+				tempClass.reda = redaInt
+				tempClass.renu = renuInt
 				
 				row.append(tempClass)
 				tilenum += 1
@@ -78,6 +95,8 @@ class mapLoader:
 			elif (Xpos % self.width == 0): # If it is the end of the row
 				tempClass = copy.copy(ParserClass.wall[ParserClass.main['wall_types'][wallInt]])
 				tempClass.posZ = highInt
+				tempClass.reda = redaInt
+				tempClass.renu = renuInt
 				
 				row.append(tempClass)
 				tiles.append(row)

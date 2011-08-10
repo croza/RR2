@@ -14,6 +14,9 @@ class Parser:
 		self.unitConfig = ConfigParser.ConfigParser()
 		self.unitConfig.read(self.mainConfig.get('main', 'unit_config_file'))
 		
+		self.objectConfig = ConfigParser.ConfigParser()
+		self.objectConfig.read(self.mainConfig.get('main', 'object_config_file'))
+		
 		self.loadConfigs()
 		
 	def loadConfigs(self):
@@ -38,6 +41,7 @@ class Parser:
 		self.user = {}
 		self.wall = {}
 		self.unit = {}
+		self.object = {}
 		
 		for section in self.mainConfig.sections():
 			data = {}
@@ -62,6 +66,12 @@ class Parser:
 			for option in self.unitConfig.options(section):
 				data[isNumber(option)] = isNumber(self.unitConfig.get(section, option))
 			self.unit[section] = unitClasses(data)
+			
+		for section in self.objectConfig.sections():
+			data = {}
+			for option in self.objectConfig.options(section):
+				data[isNumber(option)] = isNumber(self.objectConfig.get(section, option))
+			self.object[section] = objectClasses(data)
 
 		print 'END OF PARSER.PY!'
 		
@@ -77,6 +87,9 @@ class wallClasses: # Makes a class out of a dict
 		self.drillTime = dictionary['drilltime']
 		self.conductor = dictionary['conductor']
 		self.texture = dictionary['texture']
+		self.selectable = dictionary['select']
+		self.dynamite = dictionary['dynamite']
+		self.reinforce = dictionary['reinforce']
 		
 class unitClasses:
 	def __init__(self, dictionary):#, name):
@@ -92,3 +105,18 @@ class unitClasses:
 		self.digMulti = dictionary['digmulti']
 		self.reinforceMulti = dictionary['reinforcemulti']
 		self.shovelMulti = dictionary['shovelmulti']
+		
+class objectClasses:
+	def __init__(self, dictionary):
+		self.pickup = dictionary['pickup']
+		self.eValue = dictionary['evalue']
+		self.oValue = dictionary['ovalue']
+		self.stableTime = dictionary['stabletime']
+		self.charge = dictionary['charge']
+		self.decharge = dictionary['decharge']
+#pickup: yes
+#evalue: 0
+#ovalue: 0
+#stabletime: none
+#charge: energy_crystal
+#decharge: none

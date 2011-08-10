@@ -434,18 +434,10 @@ class modelLoader(DirectObject):
 			tileData.solidMap[8] == True): # Another corner south and east
 				makeOtherCorner(vertex7, vertex7, vertex1, vertex2, vertex2, vertex5)
 				tileData.modelName = 'solid corner2 south, east '+x+', '+y
-				
-			elif (tileData.solidMap[1] == False and 
-			tileData.solidMap[3] == False and 
-			tileData.solidMap[5] == True and 
-			tileData.solidMap[7] == True and 
-			tileData.solidMap[8] == True): # A corner with solids north, and east
-				makeCorner(vertex5, vertex5, vertex6, vertex0, vertex2)
-				tileData.modelName = 'solid corner1 north, east '+x+', '+y
 			
 			else:
 				makeFlat(vertex0, vertex2, vertex4, vertex6)
-				tileData.modelName = 'solid shouldn\'t work '+x+', '+y
+				tileData.modelName = 'solid no work '+x+', '+y
 				
 			geom = Geom(data) 
 			try:

@@ -9,6 +9,8 @@ from pandac.PandaModules import TextNode
 from pandac.PandaModules import Point3,Vec3,Vec4,BitMask32 
 from direct.task.Task import Task 
 
+from pandac.PandaModules import CollisionHandlerEvent, CollisionNode, CollisionSphere, CollisionTraverser, BitMask32, CollisionRay, CollisionHandlerQueue
+
 # Last modified: 10/2/2009 
 # This class takes over control of the camera and sets up a Real Time Strategy game type camera control system. The user can move the camera three 
 # ways. If the mouse cursor is moved to the edge of the screen, the camera will pan in that direction. If the right mouse button is held down, the 
@@ -31,7 +33,7 @@ from direct.task.Task import Task
 		
 
 class CameraHandler(DirectObject.DirectObject): 
-	def __init__(self, mapWidth, mapHeight, scrollborder, zoomInSpeed, zoomOutSpeed, zoomMax, zoomMin): 
+	def __init__(self, parserClass, mapLoaderClass, modelLoaderClass, mainClass, mapWidth, mapHeight, scrollborder, zoomInSpeed, zoomOutSpeed, zoomMax, zoomMin): 
 		self.zoomMax = zoomMax
 		self.zoomMin = zoomMin
 		
@@ -89,10 +91,77 @@ class CameraHandler(DirectObject.DirectObject):
 		
 		self.accept("wheel_down",lambda : self.adjustCamDist(zoomOutSpeed)) 
 		# sets up the camera handler to detet when the mouse wheel is rolled upwards and uses a lambda function to call the 
-		# adjustCamDist function  with the argument 1.1 
+		# adjustCamDist function  with the argument 1.1 #
+		
+		#########
+		
+		self.tileSelected = (0,0)
+		
+		#** Collision events ignition
+		base.cTrav = CollisionTraverser()
+		collisionHandler = CollisionHandlerEvent()
+		self.collisionHandler2 = CollisionHandlerQueue()
+
+		pickerNode=CollisionNode('mouseraycnode')
+		
+		pickerNP=base.camera.attachNewNode(pickerNode)
+		
+		self.pickerRay=CollisionRay()
+		pickerNode.addSolid(self.pickerRay)
+		
+		base.cTrav.showCollisions(render)
+
+		# The ray tag
+		pickerNode.setTag('rays','ray1')
+		base.cTrav.addCollider(pickerNP, self.collisionHandler2)
+		
+		self.accept("mouse1", self.mouseClick, [mapLoaderClass])
+		self.accept("q", self.mineWall, [parserClass, modelLoaderClass, mapLoaderClass, mainClass])
+		
+		taskMgr.add(self.rayupdate, "blah")
+		
+		##########
 		
 		taskMgr.add(self.camMoveTask,'camMoveTask') 
-		# sets the camMoveTask to be run every frame 
+		# sets the camMoveTask to be run every frame
+
+		##########
+		
+	def rayupdate(self, task):
+		if base.mouseWatcherNode.hasMouse():
+			self.entries = []
+			for i in range(self.collisionHandler2.getNumEntries()):
+				entry = self.collisionHandler2.getEntry(i)
+				self.entries.append(entry)
+			self.entries.sort(lambda x,y: cmp(y.getSurfacePoint(render).getZ(),
+									 x.getSurfacePoint(render).getZ()))	
+			
+			mpos=base.mouseWatcherNode.getMouse()
+			# this function will set our ray to shoot from the actual camera lenses off the 3d scene, passing by the mouse pointer position, making  magically hit what is pointed by it in the 3d space
+			self.pickerRay.setFromLens(base.camNode, mpos.getX(),mpos.getY())
+		return task.cont
+		
+	def mineWall(self, parserClass, modelLoaderClass, mapLoaderClass, mainClass):
+		if (self.tileSelected != (0,0)):
+			mainClass.mineWall(mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]], parserClass, modelLoaderClass, mapLoaderClass)
+			
+	def mouseClick(self, mapLoaderClass):
+		if (len(self.entries)>0):
+			x = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-6:len(self.entries[0].getIntoNode().getName())-4])
+			y = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-2:])
+			
+
+			if (mapLoaderClass.tileArray[y][x].selectable == True):
+				mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+				
+				mapLoaderClass.tileArray[y][x].model.setColor(0.5,1,0.5,1)
+				self.tileSelected = (x, y)
+				
+			else:
+				mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+				self.tileSelected = (0,0)
+				
+#			print self.tileSelected
 			
 	def turnCameraAroundPoint(self, deltaX, deltaY): 
 		# This function performs two important tasks. First, it is used for the camera orbital movement that occurs when the 
