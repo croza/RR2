@@ -4,7 +4,7 @@ import modelLoader
 import gameMain
 import stratCam
 import fpsTest
-#import something4
+import astar
 
 parserClass = Parser.Parser()
 
@@ -14,7 +14,7 @@ modelLoaderClass = modelLoader.modelLoader(parserClass, mapLoaderClass)#, mapLoa
 
 gameMain = gameMain.world(parserClass, mapLoaderClass, modelLoaderClass)
 
-stratCam.CameraHandler(parserClass, mapLoaderClass, modelLoaderClass, gameMain,
+cameraClass = stratCam.CameraHandler(parserClass, mapLoaderClass, modelLoaderClass, gameMain,
 		modelLoaderClass.mapX, modelLoaderClass.mapY,
 		parserClass.userConfig.getfloat("control", "scrollborder"),
 		parserClass.userConfig.getfloat("control", "zoominspeed"),
@@ -23,8 +23,10 @@ stratCam.CameraHandler(parserClass, mapLoaderClass, modelLoaderClass, gameMain,
 		parserClass.userConfig.getfloat("control", "zoommin"))
 
 #f = fpsTest.thirdPerson(parserClass, gameMain, mapLoaderClass, modelLoaderClass)
-#s = something4.grid(mapLoaderClass)
-#s1 = something4.aStar(s.landMesh, mapLoaderClass)
-#s1.moveTo((14,30))
+##s = astar.grid(mapLoaderClass)
+##s1 = astar.aStar(s.landMesh, mapLoaderClass)
+##s1.moveTo((6,34))
+
+#j = stratCam.mouseHandler(parserClass, mapLoaderClass, modelLoaderClass, gameMain)
 
 run()

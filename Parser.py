@@ -114,9 +114,3 @@ class objectClasses:
 		self.stableTime = dictionary['stabletime']
 		self.charge = dictionary['charge']
 		self.decharge = dictionary['decharge']
-#pickup: yes
-#evalue: 0
-#ovalue: 0
-#stabletime: none
-#charge: energy_crystal
-#decharge: none

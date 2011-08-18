@@ -22,7 +22,7 @@ class modelLoader(DirectObject):
 				
 				tile.model = self.makeModel(tile)
 					
-				tile.model.setCollideMask(0x1)
+				tile.model.setCollideMask(BitMask32.bit(0))
 					
 				tile.model.reparentTo(render)
 				tile.model.setPos(tile.posX,tile.posY,0)#tile.posZ)
@@ -31,8 +31,7 @@ class modelLoader(DirectObject):
 				
 				tex=loader.loadTexture(tile.texture)
 				tile.model.setTexture(tex, 1)
-					
-					
+				
 				tileX += 4
 				tileNumber += 1
 				

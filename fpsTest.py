@@ -24,8 +24,8 @@ class thirdPerson(DirectObject):
 								{"run":"data/models/units/ralph/ralph-run",
 								"walk":"data/models/units/ralph/ralph-walk"})
 		self.ralph.reparentTo(render)
-		self.ralph.setPos(42, 30, 0)
-#		self.ralph.setPos(6, 10, 0)
+#		self.ralph.setPos(42, 30, 0)
+		self.ralph.setPos(6, 10, 0)
 		self.ralph.setScale(0.1)
 		
 		self.accept("escape", sys.exit)

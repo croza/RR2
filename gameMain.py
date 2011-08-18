@@ -9,10 +9,13 @@ from direct.interval.IntervalGlobal import *
 
 import modelLoader
 import unitHandler
+import astar
 
 import copy
 import random
 import sys
+
+from direct.actor.Actor import Actor
 
 def addInstructions(pos, msg):
     return OnscreenText(text=msg, style=1, fg=(1,1,1,1), font = loader.loadFont("cmss12"),
@@ -20,6 +23,18 @@ def addInstructions(pos, msg):
 
 class world(DirectObject):
 	def __init__(self, parserClass, mapLoaderClass, modelLoaderClass):
+		self.accept('o', base.setFrameRateMeter, extraArgs = [True])
+	
+		self.grids = astar.grid(mapLoaderClass)
+#		unit1 = astar.aStar(self.grids.landMesh, mapLoaderClass)
+#		self.accept('l', unit1.moveTo, extraArgs = [(6,34)])
+		
+		k = unitHandler.world(parserClass, mapLoaderClass, self)
+		k.addUnit(0, (10,10,0), mapLoaderClass)
+		k.addUnit(0, (6,10,0), mapLoaderClass)
+		k.moveTo((6, 34), 0)
+		k.moveTo((34, 30), 1)
+		
 		self.tileSelected = (0,0)
 		
 		taskMgr.add(self.tskCheckWalls, "Wall checking", extraArgs = [mapLoaderClass, parserClass, modelLoaderClass])
@@ -30,16 +45,6 @@ class world(DirectObject):
 		self.mapY = mapLoaderClass.mapConfigParser.getint("map", "height")
 		
 		self.accept("escape", sys.exit)
-		
-##		p = loader.loadModel('data/models/units/HS/HS2')
-#		p.reparentTo(render)
-#		p.setPos(10,10,10)
-		
-#		plight = PointLight('plight')
-#		plight.setColor(VBase4(0.8, 0.8, 0.8, 1))
-#		plnp = render.attachNewNode(plight)
-#		plnp.setPos(10, 20, 0)
-#		render.setLight(plnp)
 		
 		print 'END OF GAMEMAIN.PY!'
 		
@@ -75,53 +80,14 @@ class world(DirectObject):
 					(tile.solidMap[1] == False and
 					tile.solidMap[3] == True and
 					tile.solidMap[5] == True and
-					tile.solidMap[7] == False)):
+					tile.solidMap[7] == False) or#):
 					
-#					(tile.modelName[0:13] == 'solid no work')):
-						self.changeTile(tile, 0, parserClass, modelLoaderClass, mapLoaderClass)
+					(tile.modelName[0:13] == 'solid no work')):
+						self.mineWall(tile, parserClass, modelLoaderClass, mapLoaderClass)
+						#self.changeTile(tile, 0, parserClass, modelLoaderClass, mapLoaderClass)
 		return Task.cont
 		
-#	def changeTile(self, firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass):
-#		def changer(firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass):
-#			firstTile.model.detachNode()
-#			
-#			posX = firstTile.posX # Setting up values to be transferred to the next tile
-#			posY = firstTile.posY
-#			posZ = firstTile.posZ
-#			cornerMap = firstTile.cornerMap
-#			solidMap = firstTile.solidMap
-#			
-#			finalTileData = parserClass.wall[parserClass.main['wall_types'][finalTileNumber]]
-#			
-#			if (finalTileData.solid == False):
-#				solidMap[4] == False
-#				
-#			elif (finalTileData.solid == True):
-#				solidMap[4] == True
-#			
-#			finalTile = copy.copy(finalTileData)
-#			finalTile.posX = posX
-#			finalTile.posY = posY
-#			finalTile.posZ = posZ
-#			finalTile.cornerMap = cornerMap
-#			finalTile.solidMap = solidMap
-#			
-#			finalTile.model = modelLoaderClass.makeModel(finalTile)#, mapLoaderClass) # From here on is reparenting and positioning the tile to the right place
-#
-#			finalTile.model.reparentTo(render)
-#			finalTile.model.setPos(finalTile.posX, finalTile.posY, 0)
-#			finalTile.model.setCollideMask(0x1)
-#			
-#			tex = loader.loadTexture(finalTile.texture)
-#			finalTile.model.setTexture(tex, 1)
-#			
-#			print finalTile.solid
-#			return finalTile
-#			
-		mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4] = changer(firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass)
-		self.reloadSurround(mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4], mapLoaderClass, modelLoaderClass, parserClass)
-		
-	def mineWall(self, firstTile, parserClass, modelLoaderClass, mapLoaderClass):
+	def changeTile(self, firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass):
 		def changer(firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass):
 			firstTile.model.detachNode()
 			
@@ -130,17 +96,42 @@ class world(DirectObject):
 #			posZ = firstTile.posZ
 #			cornerMap = firstTile.cornerMap
 #			solidMap = firstTile.solidMap
-#			reda = firstTile.reda
-#			renu = firstTile.renu
-			
+#			
 			finalTileData = parserClass.wall[parserClass.main['wall_types'][finalTileNumber]]
 			
-#			finalTile = copy.copy(finalTileData)
-#			finalTile.posX = posX
-#			finalTile.posY = posY
-#			finalTile.posZ = posZ
-#			finalTile.cornerMap = cornerMap
-#			finalTile.solidMap = solidMap
+			if (finalTileData.solid == False):
+				firstTile.solidMap[4] == False
+				
+			elif (finalTileData.solid == True):
+				firstTile.solidMap[4] == True
+			
+			finalTile = copy.copy(finalTileData)
+			finalTile.posX = firstTile.posX
+			finalTile.posY = firstTile.posY
+			finalTile.posZ = firstTile.posZ
+			finalTile.cornerMap = firstTile.cornerMap
+			finalTile.solidMap = firstTile.solidMap
+			
+			finalTile.model = modelLoaderClass.makeModel(finalTile)#, mapLoaderClass) # From here on is reparenting and positioning the tile to the right place
+
+			finalTile.model.reparentTo(render)
+			finalTile.model.setPos(finalTile.posX, finalTile.posY, 0)
+			finalTile.model.setCollideMask(0x1)
+			
+			tex = loader.loadTexture(finalTile.texture)
+			finalTile.model.setTexture(tex, 1)
+			
+			print finalTile.solid
+			return finalTile
+			
+		mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4] = changer(firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass)
+		self.reloadSurround(mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4], mapLoaderClass, modelLoaderClass, parserClass)
+		
+	def mineWall(self, firstTile, parserClass, modelLoaderClass, mapLoaderClass):
+		def changer(firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass):
+			firstTile.model.detachNode()
+			
+			finalTileData = parserClass.wall[parserClass.main['wall_types'][finalTileNumber]]
 			
 			finalTile = copy.copy(parserClass.wall[parserClass.main['wall_types'][finalTileNumber]])
 			finalTile.posX = firstTile.posX
@@ -151,11 +142,29 @@ class world(DirectObject):
 			finalTile.reda = 0
 			finalTile.renu = 0
 			
+			print finalTile.posX/4, finalTile.posY/4
+			
 			if (finalTileData.solid == False):
 				finalTile.solidMap[4] == False
+				if (finalTile.walkable == True): # Change the meshes for the new tile
+					self.grids.landMesh[finalTile.posY/4][finalTile.posX/4] = True
+				else:
+					self.grids.landMesh[finalTile.posY/4][finalTile.posX/4] = False
+				if (finalTile.water == True):
+					self.grids.waterMesh[finalTile.posY/4][finalTile.posX/4] = True
+				else:
+					self.grids.waterMesh[finalTile.posY/4][finalTile.posX/4] = False
+				if (finalTile.lava == True) or (firstTile.water == True) or (firstTile.walkable == True):
+					self.grids.airMesh[finalTile.posY/4][finalTile.posX/4] = True
+				else:
+					self.grids.airMesh[finalTile.posY/4][finalTile.posX/4] = False
 				
 			elif (finalTileData.solid == True):
 				finalTile.solidMap[4] == True
+				
+				self.grids.landMesh[finalTile.posY][finalTile.posX] = True
+				self.grids.waterMesh[finalTile.posY][finalTile.posX] = False
+				self.grids.waterMesh[finalTile.posY][finalTile.posX] = True
 			
 			finalTile.model = modelLoaderClass.makeModel(finalTile)#, mapLoaderClass) # From here on is reparenting and positioning the tile to the right place
 
@@ -230,5 +239,6 @@ class world(DirectObject):
 	def loadLight(self): #Sets the lights
 		plight = AmbientLight('my plight')
 		plight.setColor(VBase4(1.0,1.0,1.0,0.5))
+#		plight.setColor(VBase4(0.5,0.5,0.5,0.5))
 		plnp = render.attachNewNode(plight)
 		render.setLight(plnp)

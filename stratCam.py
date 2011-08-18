@@ -11,6 +11,9 @@ from direct.task.Task import Task
 
 from pandac.PandaModules import CollisionHandlerEvent, CollisionNode, CollisionSphere, CollisionTraverser, BitMask32, CollisionRay, CollisionHandlerQueue
 
+# from pandac.PandaModules import CardMaker
+from direct.gui.DirectGui import DirectButton
+
 # Last modified: 10/2/2009 
 # This class takes over control of the camera and sets up a Real Time Strategy game type camera control system. The user can move the camera three 
 # ways. If the mouse cursor is moved to the edge of the screen, the camera will pan in that direction. If the right mouse button is held down, the 
@@ -98,34 +101,34 @@ class CameraHandler(DirectObject.DirectObject):
 		self.tileSelected = (0,0)
 		
 		#** Collision events ignition
-		base.cTrav = CollisionTraverser()
+		base.cTrav = CollisionTraverser('world')
 		collisionHandler = CollisionHandlerEvent()
 		self.collisionHandler2 = CollisionHandlerQueue()
 
-		pickerNode=CollisionNode('mouseraycnode')
+		pickerNode=CollisionNode('mouse ray cnode')
 		
-		pickerNP=base.camera.attachNewNode(pickerNode)
+		pickerNP = base.camera.attachNewNode(pickerNode)
 		
 		self.pickerRay=CollisionRay()
 		pickerNode.addSolid(self.pickerRay)
 		
-		base.cTrav.showCollisions(render)
+	#	base.cTrav.showCollisions(render)
 
 		# The ray tag
 		pickerNode.setTag('rays','ray1')
 		base.cTrav.addCollider(pickerNP, self.collisionHandler2)
 		
-		self.accept("mouse1", self.mouseClick, [mapLoaderClass])
-		self.accept("q", self.mineWall, [parserClass, modelLoaderClass, mapLoaderClass, mainClass])
+		self.accept("mouse1", self.mouseClick1, [mapLoaderClass])
+		self.accept("mouse3", self.mouseClick2, [mapLoaderClass])
+#		self.accept("q", self.mineWall, [parserClass, modelLoaderClass, mapLoaderClass, mainClass])
+		
+		self.b1 = DirectButton(text = ("Mine wall", "click!", "rolling over", "disabled"), scale=.1, command=self.mineWall, extraArgs = [parserClass, modelLoaderClass, mapLoaderClass, mainClass])
+		self.b1.hide()
 		
 		taskMgr.add(self.rayupdate, "blah")
-		
-		##########
-		
+
 		taskMgr.add(self.camMoveTask,'camMoveTask') 
 		# sets the camMoveTask to be run every frame
-
-		##########
 		
 	def rayupdate(self, task):
 		if base.mouseWatcherNode.hasMouse():
@@ -144,24 +147,44 @@ class CameraHandler(DirectObject.DirectObject):
 	def mineWall(self, parserClass, modelLoaderClass, mapLoaderClass, mainClass):
 		if (self.tileSelected != (0,0)):
 			mainClass.mineWall(mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]], parserClass, modelLoaderClass, mapLoaderClass)
+			self.b1.hide()
+			self.tileSelected = (0,0)
 			
-	def mouseClick(self, mapLoaderClass):
+	def mouseClick1(self, mapLoaderClass): # Selects a wall
 		if (len(self.entries)>0):
-			x = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-6:len(self.entries[0].getIntoNode().getName())-4])
-			y = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-2:])
-			
+			print str(self.entries[0].getIntoNodePath())[0:12]
+			tempNodeName = str(self.entries[0].getIntoNodePath())[0:12]
+			if (tempNodeName == "render/solid") or (tempNodeName == "render/tile "):
+				x = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-6:len(self.entries[0].getIntoNode().getName())-4])
+				y = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-2:])
 
-			if (mapLoaderClass.tileArray[y][x].selectable == True):
-				mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
-				
-				mapLoaderClass.tileArray[y][x].model.setColor(0.5,1,0.5,1)
-				self.tileSelected = (x, y)
-				
+				if (mapLoaderClass.tileArray[y][x].selectable == True):
+					mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+					mapLoaderClass.tileArray[y][x].model.setColor(0.5,1,0.5,1)
+					self.tileSelected = (x, y)
+					
+					if (mapLoaderClass.tileArray[y][x].drillTime != None):
+						self.b1.show()
+					else:
+						self.b1.hide()
+					
+				else:
+					self.b1.hide()
+					mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+					self.tileSelected = (0,0)
+					
+			elif (tempNodeName == "render/unit/"):
+				self.b1.hide()
+				self.tileSelected = (0,0)
+				print 'UNIT'
+					
 			else:
-				mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+				self.b1.hide()
 				self.tileSelected = (0,0)
 				
-#			print self.tileSelected
+	def mouseClick2(self, mapLoaderClass): # Deselects a wall
+		mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+		self.tileSelected = (0,0)
 			
 	def turnCameraAroundPoint(self, deltaX, deltaY): 
 		# This function performs two important tasks. First, it is used for the camera orbital movement that occurs when the 

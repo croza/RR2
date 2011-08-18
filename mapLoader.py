@@ -59,7 +59,7 @@ class mapLoader:
 		Ypos = 0
 		
 		for tilenum in range(self.width * self.height):
-			print tilenum
+			# print tilenum
 			tilenum = tilenum +1 # Helps with maths (can't remeber how, but it does)
 			
 			wallStr = binascii.hexlify(wallData[tilenum-1]) # Converts the hex into a two character sting
