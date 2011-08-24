@@ -148,6 +148,10 @@ class CameraHandler(DirectObject.DirectObject):
 			self.pickerRay.setFromLens(base.camNode, mpos.getX(),mpos.getY())
 		return task.cont
 		
+	def getMousePos(self):
+		#if (len(self.entries) >= 1):
+		return Vec3(self.entries[0].getSurfacePoint(render).getX(), self.entries[0].getSurfacePoint(render).getY(), self.entries[0].getSurfacePoint(render).getZ())
+		
 	def mineWall(self, mainClass):
 		if (self.tileSelected != (0,0)):
 			mainClass.mineWall(mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]])
@@ -159,7 +163,7 @@ class CameraHandler(DirectObject.DirectObject):
 			
 	#		print str(self.entries[0].getIntoNodePath())
 			tempNodeName = str(self.entries[0].getIntoNodePath()) # Gets the node path of whatever is clicked on
-			if (tempNodeName[0:12] == "render/solid") or (tempNodeName[0:12] == "render/tile "): # If a tile or a solid
+			if (tempNodeName[0:12] == "render/solid") or (tempNodeName[0:12] == "render/tile ") or (tempNodeName[0:12] == "render/water") or (tempNodeName[0:11] == "render/lava"): # If a tile or a solid
 				
 				if (self.unitSelected != None): # If the previous thing selected was a unit
 					#mainClass.unitHandler.gameUnits[self.unitSelected].modelNode.setScale(1)
@@ -235,7 +239,7 @@ class CameraHandler(DirectObject.DirectObject):
 				mainClass.unitHandler.gameUnits[self.unitSelected].select.hide()
 				
 				tempNodeName = str(self.entries[0].getIntoNodePath())
-				if (tempNodeName[0:12] == "render/tile "): # If a tile
+				if (tempNodeName[0:12] == "render/tile ") or (tempNodeName[0:12] == "render/water") or (tempNodeName[0:11] == "render/lava"): # If a tile
 					mainClass.unitHandler.moveTo((self.entries[0].getSurfacePoint(render).getX(), self.entries[0].getSurfacePoint(render).getY()), self.unitSelected)
 		
 					#mainClass.unitHandler.gameUnits[self.unitSelected].modelNode.setScale(1)

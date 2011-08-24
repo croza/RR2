@@ -21,8 +21,8 @@ mapFiles = ['Surf.map', 'High.map', 'Cror.map']
 def ifExist(file2):
 	if (os.path.exists(directory+file2) == True):
 		pass
-	else:
-		raise "One or more of the .map files doesn't exist."
+	#else:
+	#	raise "One or more of the .map files doesn't exist."
 		
 		
 def clipFile(file2):

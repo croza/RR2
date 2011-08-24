@@ -31,6 +31,8 @@ class world:
 		
 		taskMgr.add(self.tskWorld, 'world update')
 		
+	def addUnit2(self, unitID, mainClass):
+		self.addUnit(unitID, mainClass.cameraClass.getMousePos(), mainClass)
 		
 	def addUnit(self, unitID, position, mainClass):
 		self.gameUnits[self.unitUniqueID] = copy.copy(self.unitDict[self.main['units'][unitID]])
@@ -94,7 +96,7 @@ class world:
 		tempDest = self.gameUnits[uID].aStar.moveTo(self.gameUnits[uID].modelNode, destination)
 		if (len(tempDest) >= 1):
 			self.gameUnits[uID].AIBehaviors.pathFollow(1)
-			self.gameUnits[uID].AIBehaviors.addToPath(Vec3(destination[0], destination[1], 2))
+			self.gameUnits[uID].AIBehaviors.addToPath(Vec3(destination[0], destination[1], 3))
 			for point in tempDest:
 				self.gameUnits[uID].AIBehaviors.addToPath(Vec3(4*point[0]+2, 4*point[1]+2, 3))
 	#		self.gameUnits[uID].AIBehaviors.addToPath(self.gameUnits[uID].model.getPos())

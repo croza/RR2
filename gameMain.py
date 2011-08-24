@@ -57,6 +57,7 @@ class world(DirectObject):
 		self.loadLight()
 		
 		self.accept("escape", sys.exit)
+		self.accept("space", self.unitHandler.addUnit2, extraArgs = [0, self])
 		
 		print 'END OF GAMEMAIN.PY!'
 		
@@ -92,9 +93,9 @@ class world(DirectObject):
 					(tile.solidMap[1] == False and
 					tile.solidMap[3] == True and
 					tile.solidMap[5] == True and
-					tile.solidMap[7] == False) or#):
+					tile.solidMap[7] == False) ):
 					
-					(tile.modelName[0:13] == 'solid no work')):
+					#(tile.modelName[0:13] == 'solid no work')):
 						self.mineWall(tile)
 						#self.changeTile(tile, 0, parserClass, modelLoaderClass, mapLoaderClass)
 		return Task.cont
@@ -126,9 +127,11 @@ class world(DirectObject):
 					self.grids.waterMesh[finalTile.posY/4][finalTile.posX/4] = True
 				else:
 					self.grids.waterMesh[finalTile.posY/4][finalTile.posX/4] = False
-				if (finalTile.lava == True) or (firstTile.water == True) or (firstTile.walkable == True):
+					
+				if (finalTile.lava == True) or (finalTile.water == True) or (finalTile.walkable == True):
 					self.grids.airMesh[finalTile.posY/4][finalTile.posX/4] = True
 				else:
+					print 'ppppppppp'
 					self.grids.airMesh[finalTile.posY/4][finalTile.posX/4] = False
 				
 			elif (finalTileData.solid == True):
@@ -152,10 +155,11 @@ class world(DirectObject):
 #			else:
 #				print str(firstTile.cror / 2)+' ore'
 #			
-			print self.parserClass.main['objects'][firstTile.reda], firstTile.renu
+			if (firstTile.renu != 0):
+				print self.parserClass.main['objects'][firstTile.reda], firstTile.renu
 			
-			for i in range(firstTile.renu):
-				self.modelLoaderClass.addObject(self, firstTile.reda, finalTile)
+				for i in range(firstTile.renu):
+					self.modelLoaderClass.addObject(self, firstTile.reda, finalTile)
 #				self.gameObjects[self.gameObjectID] = copy.copy(self.parserClass.object[self.parserClass.mainConfig.get('objects', str(firstTile.reda))])
 #				self.gameObjects[self.gameObjectID].modelNode = loader.loadModel(self.gameObjects[self.gameObjectID].model)
 #				self.gameObjects[self.gameObjectID].modelNode.setPos(firstTile.posX-2+random.randint(0,3)+random.random(), firstTile.posY-2+random.randint(0,3)+random.random(), 10)
