@@ -44,11 +44,17 @@ def clipFile(file2):
 	
 	endList = [] # tempFile will be read, and the bits needed will be stored here
 	endFile = ''
+	renuData = ''
+	redaData = ''
 	
+	renuList = []
+	redaList = []
+		
 	tempX = 1
 	charNumber = 1
 	
 	if (file2 == 'Cror.map'):
+		
 		for i in range(len(tempData)): # Cuts the file up into relevant sections (a list of numbers)
 			if (i % 2 == 0):
 				if (i % X == 0):
@@ -56,41 +62,88 @@ def clipFile(file2):
 					pass
 				else: # formula for resources: ore = number/2      ec = number+1/2
 					if (int('0x'+tempData[i].encode("hex"), 0) == 0): # None
-						something = to_binary(hex(0))
+						renu = to_binary(hex(0))
+						reda = to_binary(hex(0))
+						
+					#	something = to_binary(hex(0))
 						
 					elif (int('0x'+tempData[i].encode("hex"), 0) == 1) or (int('0x'+tempData[i].encode("hex"), 0) == 3): # 1 energy crystal
-						something = to_binary(hex(1))
+						renu = to_binary(hex(1))
+						reda = to_binary(hex(1))
+						
+					#	something = to_binary(hex(1))
 						
 					elif (int('0x'+tempData[i].encode("hex"), 0) == 2) or (int('0x'+tempData[i].encode("hex"), 0) == 4): # 1 ore
-						something = to_binary(hex(2))
+						renu = to_binary(hex(2))
+						reda = to_binary(hex(2))
+						
+					#	something = to_binary(hex(2))
 						
 					elif (int('0x'+tempData[i].encode("hex"), 0) == 5) or (int('0x'+tempData[i].encode("hex"), 0) == 7): # 3 energy crystals
-						something = to_binary(hex(5))
+						renu = to_binary(hex(3))
+						reda = to_binary(hex(1))
+						
+					#	something = to_binary(hex(5))
 						
 					elif (int('0x'+tempData[i].encode("hex"), 0) == 6) or (int('0x'+tempData[i].encode("hex"), 0) == 8): # 3 ore
-						something = to_binary(hex(6))
+						renu = to_binary(hex(3))
+						reda = to_binary(hex(2))
+						
+					#	something = to_binary(hex(6))
 						
 					elif (int('0x'+tempData[i].encode("hex"), 0) == 9) or (int('0x'+tempData[i].encode("hex"), 0) == 11): # 5 energy crystals
-						something = to_binary(hex(9))
+						renu = to_binary(hex(5))
+						reda = to_binary(hex(1))
+						
+					#	something = to_binary(hex(9))
 						
 					elif (int('0x'+tempData[i].encode("hex"), 0) == 10) or (int('0x'+tempData[i].encode("hex"), 0) == 12) or (int('0x'+tempData[i].encode("hex"), 0) == 16): # 5 ore
-						something = to_binary(hex(10))
+						renu = to_binary(hex(5))
+						reda = to_binary(hex(2))
+						
+					#	something = to_binary(hex(10))
 						
 					elif (int('0x'+tempData[i].encode("hex"), 0) == 13) or (int('0x'+tempData[i].encode("hex"), 0) == 19): # 11 energy crystals
-						something = to_binary(hex(21))
+						renu = to_binary(hex(11))
+						reda = to_binary(hex(1))
+						
+					#	something = to_binary(hex(21))
 						
 					elif (int('0x'+tempData[i].encode("hex"), 0) == 14) or (int('0x'+tempData[i].encode("hex"), 0) == 20): # 11 ore
+						renu = to_binary(hex(11))
+						reda = to_binary(hex(2))
+						
 						something = to_binary(hex(22))
 						
 					elif (int('0x'+tempData[i].encode("hex"), 0) == 17) or (int('0x'+tempData[i].encode("hex"), 0) == 23): # 25 energy crystals
-						something = to_binary(hex(49))
+						renu = to_binary(hex(25))
+						reda = to_binary(hex(1))
+						
+					#	something = to_binary(hex(49))
 						
 					elif (int('0x'+tempData[i].encode("hex"), 0) == 18) or (int('0x'+tempData[i].encode("hex"), 0) == 24): # 25 ore
-						something = to_binary(hex(50))
+						renu = to_binary(hex(25))
+						reda = to_binary(hex(2))
+						
+					#	something = to_binary(hex(50))
 						
 					else:
-						something = to_binary(hex(int('0x'+tempData[i].encode("hex"), 0)))
-					endList.append(something)
+					#	something = to_binary(hex(int('0x'+tempData[i].encode("hex"), 0)))
+						renu = to_binary(hex(0))
+						reda = to_binary(hex(0))
+					
+					renuList.append(renu)
+					redaList.append(reda)
+					
+		for value in renuList:
+			renuData = renuData+str(value)
+		for value in redaList:
+			redaData = redaData+str(value)
+		
+		makeFile(renuData, 'Renu.map')
+		makeFile(redaData, 'Reda.map')
+					
+					#endList.append(something)
 				#print len(endList)
 	else:
 		for i in range(len(tempData)): # Cuts the file up into relevant sections (a list of numbers)
@@ -102,12 +155,14 @@ def clipFile(file2):
 					endList.append(something)
 					#print something, tempData[i]
 	
-	for value in endList:
-		endFile = endFile+str(value)
-		
-	print len(endFile)
-	
-	return endFile
+		for value in endList:
+			endFile = endFile+str(value)
+					
+		print len(endFile)
+				
+		makeFile(endFile, file2)
+				
+				#return endFile
 	
 def makeFile(fileData, name):
 	directory2 = directory+'converted/'
@@ -116,8 +171,8 @@ def makeFile(fileData, name):
 		os.makedirs(directory2)
 		
 	newFileDir = open(directory2+name, "w")
-	print len(newFile)
-	newFileDir.write(newFile)
+	print len(fileData)
+	newFileDir.write(fileData)
 	
 def makeConfig():
 	configFile = open(directory+'/converted/map.cfg', "w")
@@ -127,7 +182,8 @@ def makeConfig():
 for file in mapFiles:
 	ifExist(file)
 	print file
-	newFile = clipFile(file)
-	makeFile(newFile, file)
+	clipFile(file)
+#	newFile = clipFile(file)
+#	makeFile(newFile, file)
 print 'map.cfg'
 makeConfig()

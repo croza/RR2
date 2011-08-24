@@ -72,7 +72,7 @@ class Parser:
 			for option in self.objectConfig.options(section):
 				data[isNumber(option)] = isNumber(self.objectConfig.get(section, option))
 			self.object[section] = objectClasses(data)
-
+		
 		print 'END OF PARSER.PY!'
 		
 class wallClasses: # Makes a class out of a dict
@@ -105,9 +105,12 @@ class unitClasses:
 		self.digMulti = dictionary['digmulti']
 		self.reinforceMulti = dictionary['reinforcemulti']
 		self.shovelMulti = dictionary['shovelmulti']
+		self.modelHeight = dictionary['modelheight']
+		self.selectScale = dictionary['selectscale']
 		
 class objectClasses:
 	def __init__(self, dictionary):
+		self.model = dictionary['model']
 		self.pickup = dictionary['pickup']
 		self.eValue = dictionary['evalue']
 		self.oValue = dictionary['ovalue']

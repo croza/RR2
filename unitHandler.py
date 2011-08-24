@@ -4,17 +4,19 @@ from pandac.PandaModules import *
 from direct.task.Task import Task
 #from direct.showbase.DirectObject import DirectObject
 from panda3d.ai import *
+from direct.gui.OnscreenImage import OnscreenImage
+from pandac.PandaModules import TransparencyAttrib
 
 import copy
 
 import astar
 
 class world:
-	def __init__(self, parserClass, mapLoaderClass, mainClass):
+	def __init__(self, mainClass):
 		self.AIWorld = AIWorld(render)
 		
-		self.unitDict = parserClass.unit
-		self.main = parserClass.main # To redirect the unitID to the unitName
+		self.unitDict = mainClass.parserClass.unit
+		self.main = mainClass.parserClass.main # To redirect the unitID to the unitName
 		
 		self.gameUnits = {} # A dictionary containing the info of all the in-game units, each with a unique ID as a key
 		self.moving = []
@@ -30,18 +32,26 @@ class world:
 		taskMgr.add(self.tskWorld, 'world update')
 		
 		
-	def addUnit(self, unitID, position, mapLoaderClass):
+	def addUnit(self, unitID, position, mainClass):
 		self.gameUnits[self.unitUniqueID] = copy.copy(self.unitDict[self.main['units'][unitID]])
 		self.gameUnits[self.unitUniqueID].uID = self.unitUniqueID
 		self.gameUnits[self.unitUniqueID].modelNode = loader.loadModel(self.gameUnits[self.unitUniqueID].model)
-		self.gameUnits[self.unitUniqueID].modelNode.setName('unit')
+		self.gameUnits[self.unitUniqueID].modelNode.setName('unit ' + str(self.unitUniqueID).zfill(3))
 		self.gameUnits[self.unitUniqueID].modelNode.reparentTo(render)
 		self.gameUnits[self.unitUniqueID].modelNode.setPos(position)
 		self.gameUnits[self.unitUniqueID].modelNode.setCollideMask(BitMask32.bit(1))
-
+		
+		self.gameUnits[self.unitUniqueID].select = OnscreenImage(image = 'data/models/game/selected.png')
+#		self.gameUnits[self.unitUniqueID].select.setColor(1,1,1,0)
+		self.gameUnits[self.unitUniqueID].select.setScale(float(self.gameUnits[self.unitUniqueID].selectScale))
+		self.gameUnits[self.unitUniqueID].select.reparentTo(self.gameUnits[self.unitUniqueID].modelNode)
+		self.gameUnits[self.unitUniqueID].select.setZ(float(self.gameUnits[self.unitUniqueID].modelHeight)/2)
+		self.gameUnits[self.unitUniqueID].select.setTransparency(TransparencyAttrib.MAlpha)
+		self.gameUnits[self.unitUniqueID].select.setBillboardPointEye()
+		self.gameUnits[self.unitUniqueID].select.hide()
 		
 		self.gameUnits[self.unitUniqueID].groundRay = CollisionRay()
-		self.gameUnits[self.unitUniqueID].groundRay.setOrigin(0,0,1000)
+		self.gameUnits[self.unitUniqueID].groundRay.setOrigin(0,0,10)
 		self.gameUnits[self.unitUniqueID].groundRay.setDirection(0,0,-1)
 		
 		self.gameUnits[self.unitUniqueID].groundCol = CollisionNode('unit Ray')
@@ -72,11 +82,12 @@ class world:
 		self.gameUnits[self.unitUniqueID].moving = False
 		
 		if (self.gameUnits[self.unitUniqueID].moveType == 'ground'):
-			self.gameUnits[self.unitUniqueID].aStar = astar.aStar(self.meshes.landMesh, mapLoaderClass)
+			self.gameUnits[self.unitUniqueID].aStar = astar.aStar(self.meshes.landMesh, mainClass)
 		elif (self.gameUnits[self.unitUniqueID].moveType == 'water'):
-			self.gameUnits[self.unitUniqueID].aStar = astar.aStar(self.meshes.waterMesh, mapLoaderClass)
+			self.gameUnits[self.unitUniqueID].aStar = astar.aStar(self.meshes.waterMesh, mainClass)
 		elif (self.gameUnits[self.unitUniqueID].moveType == 'air'):
-			self.gameUnits[self.unitUniqueID].aStar = astar.aStar(self.meshes.airMesh, mapLoaderClass)
+			self.gameUnits[self.unitUniqueID].aStar = astar.aStar(self.meshes.airMesh, mainClass)
+
 		self.unitUniqueID += 1
 		
 	def moveTo(self, destination, uID):

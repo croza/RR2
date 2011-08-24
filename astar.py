@@ -4,14 +4,14 @@ import copy
 from pandac.PandaModules import *
 
 class grid:
-	def __init__(self, mapLoaderClass):
+	def __init__(self, mainClass):
 #		self.allMesh = []
 		
 		self.landMesh = []
 		self.waterMesh = []
 		self.airMesh = []
 		
-		for row in mapLoaderClass.tileArray:
+		for row in mainClass.mapLoaderClass.tileArray:
 			landRow = []
 			waterRow = []
 			airRow = []
@@ -46,11 +46,11 @@ class Node:
 		self.parent = parent
 		
 class aStar:
-	def __init__(self, mesh, mapLoaderClass):
+	def __init__(self, mesh, mainClass):
 		self.mesh = mesh
 		
-		self.width = mapLoaderClass.width
-		self.height = mapLoaderClass.height
+		self.width = mainClass.mapX - 1
+		self.height = mainClass.mapY - 1
 		
 	def moveTo(self, startNode, endPos):
 		def calcH(position, finish): # A function to calculate the H value

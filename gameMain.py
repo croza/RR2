@@ -7,49 +7,61 @@ from pandac.PandaModules import Point2
 
 from direct.interval.IntervalGlobal import *
 
+import Parser
+import mapLoader
 import modelLoader
+import stratCam
 import unitHandler
 import astar
 
 import copy
 import random
 import sys
+import random
 
-from direct.actor.Actor import Actor
+#from direct.gui.OnscreenImage import OnscreenImage
+#from direct.actor.Actor import Actor
 
 def addInstructions(pos, msg):
     return OnscreenText(text=msg, style=1, fg=(1,1,1,1), font = loader.loadFont("cmss12"),
                         pos=(-1.3, pos), align=TextNode.ALeft, scale = .1)
 
 class world(DirectObject):
-	def __init__(self, parserClass, mapLoaderClass, modelLoaderClass):
-		self.accept('o', base.setFrameRateMeter, extraArgs = [True])
-	
-		self.grids = astar.grid(mapLoaderClass)
-#		unit1 = astar.aStar(self.grids.landMesh, mapLoaderClass)
-#		self.accept('l', unit1.moveTo, extraArgs = [(6,34)])
+	def __init__(self):
+		self.parserClass = Parser.Parser() # Making the required instances
+		self.mapLoaderClass = mapLoader.mapLoader(self)
 		
-		k = unitHandler.world(parserClass, mapLoaderClass, self)
-		k.addUnit(0, (10,10,0), mapLoaderClass)
-		k.addUnit(0, (6,10,0), mapLoaderClass)
-		k.moveTo((6, 34), 0)
-		k.moveTo((34, 30), 1)
+		self.gameObjects = {}
+		self.gameObjectID = 0
+		
+		self.mapX = self.mapLoaderClass.mapConfigParser.getint("map", "width") - 1 # Name says it all really
+		self.mapY = self.mapLoaderClass.mapConfigParser.getint("map", "height") - 1
+
+		self.modelLoaderClass = modelLoader.modelLoader(self)
+		self.cameraClass = stratCam.CameraHandler(self)
+		
+		base.setFrameRateMeter(True)
+	
+		self.grids = astar.grid(self)
+		
+		self.unitHandler = unitHandler.world(self)
+		self.unitHandler.addUnit(0, (10,10,0), self)
+		self.unitHandler.addUnit(0, (6,10,0), self)
+		self.unitHandler.moveTo((6, 34), 0)
+		self.unitHandler.moveTo((34, 30), 1)
 		
 		self.tileSelected = (0,0)
 		
-		taskMgr.add(self.tskCheckWalls, "Wall checking", extraArgs = [mapLoaderClass, parserClass, modelLoaderClass])
+		taskMgr.add(self.tskCheckWalls, "Wall checking")
 		
 		self.loadLight()
-		
-		self.mapX = mapLoaderClass.mapConfigParser.getint("map", "width")
-		self.mapY = mapLoaderClass.mapConfigParser.getint("map", "height")
 		
 		self.accept("escape", sys.exit)
 		
 		print 'END OF GAMEMAIN.PY!'
 		
-	def tskCheckWalls(self, mapLoaderClass, parserClass, modelLoaderClass):
-		for row in mapLoaderClass.tileArray:
+	def tskCheckWalls(self, task):
+		for row in self.mapLoaderClass.tileArray:
 			for tile in row:
 				if (tile.solid == True):
 					if ((tile.solidMap[1] == True and
@@ -83,57 +95,17 @@ class world(DirectObject):
 					tile.solidMap[7] == False) or#):
 					
 					(tile.modelName[0:13] == 'solid no work')):
-						self.mineWall(tile, parserClass, modelLoaderClass, mapLoaderClass)
+						self.mineWall(tile)
 						#self.changeTile(tile, 0, parserClass, modelLoaderClass, mapLoaderClass)
 		return Task.cont
-		
-	def changeTile(self, firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass):
-		def changer(firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass):
+
+	def mineWall(self, firstTile):
+		def changer(firstTile, finalTileNumber):
 			firstTile.model.detachNode()
 			
-#			posX = firstTile.posX # Setting up values to be transferred to the next tile
-#			posY = firstTile.posY
-#			posZ = firstTile.posZ
-#			cornerMap = firstTile.cornerMap
-#			solidMap = firstTile.solidMap
-#			
-			finalTileData = parserClass.wall[parserClass.main['wall_types'][finalTileNumber]]
-			
-			if (finalTileData.solid == False):
-				firstTile.solidMap[4] == False
-				
-			elif (finalTileData.solid == True):
-				firstTile.solidMap[4] == True
+			finalTileData = self.parserClass.wall[self.parserClass.main['wall_types'][finalTileNumber]]
 			
 			finalTile = copy.copy(finalTileData)
-			finalTile.posX = firstTile.posX
-			finalTile.posY = firstTile.posY
-			finalTile.posZ = firstTile.posZ
-			finalTile.cornerMap = firstTile.cornerMap
-			finalTile.solidMap = firstTile.solidMap
-			
-			finalTile.model = modelLoaderClass.makeModel(finalTile)#, mapLoaderClass) # From here on is reparenting and positioning the tile to the right place
-
-			finalTile.model.reparentTo(render)
-			finalTile.model.setPos(finalTile.posX, finalTile.posY, 0)
-			finalTile.model.setCollideMask(0x1)
-			
-			tex = loader.loadTexture(finalTile.texture)
-			finalTile.model.setTexture(tex, 1)
-			
-			print finalTile.solid
-			return finalTile
-			
-		mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4] = changer(firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass)
-		self.reloadSurround(mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4], mapLoaderClass, modelLoaderClass, parserClass)
-		
-	def mineWall(self, firstTile, parserClass, modelLoaderClass, mapLoaderClass):
-		def changer(firstTile, finalTileNumber, parserClass, modelLoaderClass, mapLoaderClass):
-			firstTile.model.detachNode()
-			
-			finalTileData = parserClass.wall[parserClass.main['wall_types'][finalTileNumber]]
-			
-			finalTile = copy.copy(parserClass.wall[parserClass.main['wall_types'][finalTileNumber]])
 			finalTile.posX = firstTile.posX
 			finalTile.posY = firstTile.posY
 			finalTile.posZ = firstTile.posZ
@@ -166,7 +138,7 @@ class world(DirectObject):
 				self.grids.waterMesh[finalTile.posY][finalTile.posX] = False
 				self.grids.waterMesh[finalTile.posY][finalTile.posX] = True
 			
-			finalTile.model = modelLoaderClass.makeModel(finalTile)#, mapLoaderClass) # From here on is reparenting and positioning the tile to the right place
+			finalTile.model = self.modelLoaderClass.makeModel(finalTile)#, mapLoaderClass) # From here on is reparenting and positioning the tile to the right place
 
 			finalTile.model.reparentTo(render)
 			finalTile.model.setPos(finalTile.posX, finalTile.posY, 0)
@@ -180,14 +152,25 @@ class world(DirectObject):
 #			else:
 #				print str(firstTile.cror / 2)+' ore'
 #			
-			print parserClass.main['objects'][firstTile.reda], firstTile.renu
+			print self.parserClass.main['objects'][firstTile.reda], firstTile.renu
+			
+			for i in range(firstTile.renu):
+				self.modelLoaderClass.addObject(self, firstTile.reda, finalTile)
+#				self.gameObjects[self.gameObjectID] = copy.copy(self.parserClass.object[self.parserClass.mainConfig.get('objects', str(firstTile.reda))])
+#				self.gameObjects[self.gameObjectID].modelNode = loader.loadModel(self.gameObjects[self.gameObjectID].model)
+#				self.gameObjects[self.gameObjectID].modelNode.setPos(firstTile.posX-2+random.randint(0,3)+random.random(), firstTile.posY-2+random.randint(0,3)+random.random(), 10)
+#				self.gameObjects[self.gameObjectID].modelNode.reparentTo(render)
+#				self.gameObjects[self.gameObjectID].modelNode.setCollideMask(BitMask32.bit(0))
+				
+				self.gameObjectID += 1
+				
 	#		print parserClass.object[parserClass.main['objects'][firstTile.reda]]
 			return finalTile
 			
-		mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4] = changer(firstTile, 0, parserClass, modelLoaderClass, mapLoaderClass)
-		self.reloadSurround(mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4], mapLoaderClass, modelLoaderClass, parserClass)
+		self.mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4] = changer(firstTile, 0)
+		self.reloadSurround(self.mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4])
 
-	def reloadSurround(self, tileChanged, mapLoaderClass, modelLoaderClass, parserClass):
+	def reloadSurround(self, tileChanged):
 		aroundInfo = []
 		
 		yBehind = tileChanged.posY/4 - 1
@@ -208,26 +191,26 @@ class world(DirectObject):
 		if (xBehind <= 0):
 			xBehind = 0
 			
-		aroundInfo.append(mapLoaderClass.tileArray[yBehind][xBehind]) # BL
-		aroundInfo.append(mapLoaderClass.tileArray[yBehind][tileChanged.posX/4]) # BC
-		aroundInfo.append(mapLoaderClass.tileArray[yBehind][xInfront]) # BR
+		aroundInfo.append(self.mapLoaderClass.tileArray[yBehind][xBehind]) # BL
+		aroundInfo.append(self.mapLoaderClass.tileArray[yBehind][tileChanged.posX/4]) # BC
+		aroundInfo.append(self.mapLoaderClass.tileArray[yBehind][xInfront]) # BR
 		
-		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4][xBehind]) # L
-		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4][tileChanged.posX/4-1])
-		aroundInfo.append(mapLoaderClass.tileArray[tileChanged.posY/4][xInfront]) # R
+		aroundInfo.append(self.mapLoaderClass.tileArray[tileChanged.posY/4][xBehind]) # L
+		aroundInfo.append(self.mapLoaderClass.tileArray[tileChanged.posY/4][tileChanged.posX/4-1])
+		aroundInfo.append(self.mapLoaderClass.tileArray[tileChanged.posY/4][xInfront]) # R
 		
-		aroundInfo.append(mapLoaderClass.tileArray[yInfront][xBehind]) # TL
-		aroundInfo.append(mapLoaderClass.tileArray[yInfront][tileChanged.posX/4]) # TC
-		aroundInfo.append(mapLoaderClass.tileArray[yInfront][xInfront]) # TR
+		aroundInfo.append(self.mapLoaderClass.tileArray[yInfront][xBehind]) # TL
+		aroundInfo.append(self.mapLoaderClass.tileArray[yInfront][tileChanged.posX/4]) # TC
+		aroundInfo.append(self.mapLoaderClass.tileArray[yInfront][xInfront]) # TR
 		
-		name  = mapLoaderClass.tileArray[tileChanged.posY/4+1][tileChanged.posX/4+1].modelName
+		name  = self.mapLoaderClass.tileArray[tileChanged.posY/4+1][tileChanged.posX/4+1].modelName
 		
 		for around in aroundInfo:
-			around.solidMap = modelLoaderClass.reloadSolidMap(mapLoaderClass, around.posX/4, around.posY/4)
+			around.solidMap = self.modelLoaderClass.reloadSolidMap(self, around.posX/4, around.posY/4)
 			
 			around.model.remove()
 			
-			around.model = modelLoaderClass.makeModel(around)
+			around.model = self.modelLoaderClass.makeModel(around)
 			around.model.setCollideMask(0x01)
 			
 			around.model.reparentTo(render)
@@ -238,7 +221,11 @@ class world(DirectObject):
 		
 	def loadLight(self): #Sets the lights
 		plight = AmbientLight('my plight')
-		plight.setColor(VBase4(1.0,1.0,1.0,0.5))
+		light = self.parserClass.userConfig.getfloat('display', 'light')
+		plight.setColor(VBase4(light,light,light,0.5))
 #		plight.setColor(VBase4(0.5,0.5,0.5,0.5))
 		plnp = render.attachNewNode(plight)
 		render.setLight(plnp)
+		
+w = world()
+run()

@@ -5,8 +5,8 @@ import binascii # For dealing with the hex of the .map files
 import copy
 
 class mapLoader:
-	def __init__(self, ParserClass):
-		self.mapDir = ParserClass.main['main']['testing_map']
+	def __init__(self, mainClass):
+		self.mapDir = mainClass.parserClass.main['main']['testing_map']
 		try:
 			self.mapConfigFile = open(self.mapDir + "map.cfg")
 		except:
@@ -24,7 +24,7 @@ class mapLoader:
 #		name = self.mapConfigParser.get("map", "name")
 #		description = self.mapConfigParser.get("map", "desc")
 		
-		self.tileArray = self.ganerate_tile_array(ParserClass)
+		self.tileArray = self.ganerate_tile_array(mainClass.parserClass)
 		
 		print 'END OF MAPLOADER.PY!'
 		

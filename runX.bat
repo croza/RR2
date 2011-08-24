@@ -1,2 +1,2 @@
-python RR2.py
+python gameMain.py
 pause

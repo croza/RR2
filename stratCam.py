@@ -13,6 +13,7 @@ from pandac.PandaModules import CollisionHandlerEvent, CollisionNode, CollisionS
 
 # from pandac.PandaModules import CardMaker
 from direct.gui.DirectGui import DirectButton
+from pandac.PandaModules import VBase4, VBase3, PointLight
 
 # Last modified: 10/2/2009 
 # This class takes over control of the camera and sets up a Real Time Strategy game type camera control system. The user can move the camera three 
@@ -36,9 +37,11 @@ from direct.gui.DirectGui import DirectButton
 		
 
 class CameraHandler(DirectObject.DirectObject): 
-	def __init__(self, parserClass, mapLoaderClass, modelLoaderClass, mainClass, mapWidth, mapHeight, scrollborder, zoomInSpeed, zoomOutSpeed, zoomMax, zoomMin): 
-		self.zoomMax = zoomMax
-		self.zoomMin = zoomMin
+	def __init__(self, mainClass): 
+		self.zoomMax = mainClass.parserClass.userConfig.getfloat("control", "zoommax")
+		self.zoomMin = mainClass.parserClass.userConfig.getfloat("control", "zoommin")
+		zoomInSpeed = mainClass.parserClass.userConfig.getfloat("control", "zoominspeed")
+		zoomOutSpeed = mainClass.parserClass.userConfig.getfloat("control", "zoomoutspeed")
 		
 		base.disableMouse() 
 		# This disables the default mouse based camera control used by panda. This default control is awkward, and won't be used. 
@@ -64,13 +67,13 @@ class CameraHandler(DirectObject.DirectObject):
 		# This variable is used as a divisor when calculating how far to move the camera when panning. Higher numbers will yield slower panning 
 		# and lower numbers will yield faster panning. This must not be set to 0. 
 		
-		self.panZoneSize = scrollborder
+		self.panZoneSize = mainClass.parserClass.userConfig.getfloat("control", "scrollborder")
 		# This variable controls how close the mouse cursor needs to be to the edge of the screen to start panning the camera. It must be less than 1, 
 		# and I recommend keeping it less than .2 
 		
 		
-		self.panLimitsX = Vec2(0, 4*mapWidth) 
-		self.panLimitsY = Vec2(0, 4*mapHeight) 
+		self.panLimitsX = Vec2(0, 4*mainClass.mapX) 
+		self.panLimitsY = Vec2(0, 4*mainClass.mapY) 
 		# These two vairables will serve as limits for how far the camera can pan, so you don't scroll away from the map. 
 
 		self.setTarget(0,0,0) 
@@ -99,6 +102,7 @@ class CameraHandler(DirectObject.DirectObject):
 		#########
 		
 		self.tileSelected = (0,0)
+		self.unitSelected = None
 		
 		#** Collision events ignition
 		base.cTrav = CollisionTraverser('world')
@@ -118,11 +122,11 @@ class CameraHandler(DirectObject.DirectObject):
 		pickerNode.setTag('rays','ray1')
 		base.cTrav.addCollider(pickerNP, self.collisionHandler2)
 		
-		self.accept("mouse1", self.mouseClick1, [mapLoaderClass])
-		self.accept("mouse3", self.mouseClick2, [mapLoaderClass])
+		self.accept("mouse1", self.mouseClick1, [mainClass])
+		self.accept("mouse3", self.mouseClick2, [mainClass])
 #		self.accept("q", self.mineWall, [parserClass, modelLoaderClass, mapLoaderClass, mainClass])
 		
-		self.b1 = DirectButton(text = ("Mine wall", "click!", "rolling over", "disabled"), scale=.1, command=self.mineWall, extraArgs = [parserClass, modelLoaderClass, mapLoaderClass, mainClass])
+		self.b1 = DirectButton(text = ("Mine wall", "click!", "rolling over", "disabled"), scale=.1, command=self.mineWall, extraArgs = [mainClass])
 		self.b1.hide()
 		
 		taskMgr.add(self.rayupdate, "blah")
@@ -138,53 +142,104 @@ class CameraHandler(DirectObject.DirectObject):
 				self.entries.append(entry)
 			self.entries.sort(lambda x,y: cmp(y.getSurfacePoint(render).getZ(),
 									 x.getSurfacePoint(render).getZ()))	
-			
+									 
 			mpos=base.mouseWatcherNode.getMouse()
 			# this function will set our ray to shoot from the actual camera lenses off the 3d scene, passing by the mouse pointer position, making  magically hit what is pointed by it in the 3d space
 			self.pickerRay.setFromLens(base.camNode, mpos.getX(),mpos.getY())
 		return task.cont
 		
-	def mineWall(self, parserClass, modelLoaderClass, mapLoaderClass, mainClass):
+	def mineWall(self, mainClass):
 		if (self.tileSelected != (0,0)):
-			mainClass.mineWall(mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]], parserClass, modelLoaderClass, mapLoaderClass)
+			mainClass.mineWall(mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]])
 			self.b1.hide()
 			self.tileSelected = (0,0)
 			
-	def mouseClick1(self, mapLoaderClass): # Selects a wall
+	def mouseClick1(self, mainClass): # Selects a wall or a unit (Buildings yet to be implemented)
 		if (len(self.entries)>0):
-			print str(self.entries[0].getIntoNodePath())[0:12]
-			tempNodeName = str(self.entries[0].getIntoNodePath())[0:12]
-			if (tempNodeName == "render/solid") or (tempNodeName == "render/tile "):
+			
+	#		print str(self.entries[0].getIntoNodePath())
+			tempNodeName = str(self.entries[0].getIntoNodePath()) # Gets the node path of whatever is clicked on
+			if (tempNodeName[0:12] == "render/solid") or (tempNodeName[0:12] == "render/tile "): # If a tile or a solid
+				
+				if (self.unitSelected != None): # If the previous thing selected was a unit
+					#mainClass.unitHandler.gameUnits[self.unitSelected].modelNode.setScale(1)
+					mainClass.unitHandler.gameUnits[self.unitSelected].select.hide()
+					
+					if (mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.behaviorStatus('pathfollow') == 'paused'):
+						mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.resumeAi("pathfollow")
+					self.unitSelected = None
+				
+				# Gets the x and y coords of the wall from their names
 				x = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-6:len(self.entries[0].getIntoNode().getName())-4])
 				y = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-2:])
 
-				if (mapLoaderClass.tileArray[y][x].selectable == True):
-					mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
-					mapLoaderClass.tileArray[y][x].model.setColor(0.5,1,0.5,1)
+				if (mainClass.mapLoaderClass.tileArray[y][x].selectable == True): # If it is selectable, then select it
+					mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+					mainClass.mapLoaderClass.tileArray[y][x].model.setColor(0.5,1,0.5,1)
 					self.tileSelected = (x, y)
 					
-					if (mapLoaderClass.tileArray[y][x].drillTime != None):
+					if (mainClass.mapLoaderClass.tileArray[y][x].drillTime != None): # Show the button if it's mineable
 						self.b1.show()
 					else:
 						self.b1.hide()
+						
 					
-				else:
+					
+				else: # If it is not selectable
 					self.b1.hide()
-					mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+					mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
 					self.tileSelected = (0,0)
 					
-			elif (tempNodeName == "render/unit/"):
+			elif (tempNodeName[0:11] == "render/unit"): # If a unit
+				if (self.tileSelected != (0,0)):
+					mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+					self.tileSelected = (0,0)
+					self.b1.hide()
+				
+				if (self.unitSelected != None): # If the previous thing selected was a unit
+					#mainClass.unitHandler.gameUnits[self.unitSelected].modelNode.setScale(1)
+					mainClass.unitHandler.gameUnits[self.unitSelected].select.hide()
+					
+					if (mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.behaviorStatus('pathfollow') == 'paused'):
+						mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.resumeAi("pathfollow")
+					self.unitSelected = None
+				
 				self.b1.hide()
 				self.tileSelected = (0,0)
+				
+				self.unitSelected = int(tempNodeName[12:15])
+				
+				#mainClass.unitHandler.gameUnits[self.unitSelected].modelNode.setScale(2)
+				mainClass.unitHandler.gameUnits[self.unitSelected].select.show()
+				
+				if (mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.behaviorStatus('pathfollow') != 'done'):
+					mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.pauseAi("pathfollow")
+				
 				print 'UNIT'
 					
 			else:
 				self.b1.hide()
 				self.tileSelected = (0,0)
 				
-	def mouseClick2(self, mapLoaderClass): # Deselects a wall
-		mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
-		self.tileSelected = (0,0)
+	def mouseClick2(self, mainClass): # Deselects a wall
+		if (self.tileSelected != (0,0)):
+			mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+			
+			self.b1.hide()
+			
+			self.tileSelected = (0,0)
+			
+		elif (self.unitSelected != None):
+			if (len(self.entries) > 0):
+			
+				mainClass.unitHandler.gameUnits[self.unitSelected].select.hide()
+				
+				tempNodeName = str(self.entries[0].getIntoNodePath())
+				if (tempNodeName[0:12] == "render/tile "): # If a tile
+					mainClass.unitHandler.moveTo((self.entries[0].getSurfacePoint(render).getX(), self.entries[0].getSurfacePoint(render).getY()), self.unitSelected)
+		
+					#mainClass.unitHandler.gameUnits[self.unitSelected].modelNode.setScale(1)
+					self.unitSelected = None
 			
 	def turnCameraAroundPoint(self, deltaX, deltaY): 
 		# This function performs two important tasks. First, it is used for the camera orbital movement that occurs when the 
