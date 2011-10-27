@@ -12,7 +12,7 @@ from direct.task.Task import Task
 from pandac.PandaModules import CollisionHandlerEvent, CollisionNode, CollisionSphere, CollisionTraverser, BitMask32, CollisionRay, CollisionHandlerQueue
 
 # from pandac.PandaModules import CardMaker
-from direct.gui.DirectGui import DirectButton
+from direct.gui.DirectGui import DirectButton, DirectFrame, DirectLabel
 from pandac.PandaModules import VBase4, VBase3, PointLight
 
 # Last modified: 10/2/2009 
@@ -37,13 +37,14 @@ from pandac.PandaModules import VBase4, VBase3, PointLight
 		
 
 class CameraHandler(DirectObject.DirectObject): 
-	def __init__(self, mainClass): 
+	def __init__(self, mainClass):
+		
 		self.zoomMax = mainClass.parserClass.userConfig.getfloat("control", "zoommax")
 		self.zoomMin = mainClass.parserClass.userConfig.getfloat("control", "zoommin")
 		zoomInSpeed = mainClass.parserClass.userConfig.getfloat("control", "zoominspeed")
 		zoomOutSpeed = mainClass.parserClass.userConfig.getfloat("control", "zoomoutspeed")
 		
-		base.disableMouse() 
+	#	base.disableMouse() 
 		# This disables the default mouse based camera control used by panda. This default control is awkward, and won't be used. 
 		
 		base.camera.setPos(10,20,10) 
@@ -99,152 +100,9 @@ class CameraHandler(DirectObject.DirectObject):
 		# sets up the camera handler to detet when the mouse wheel is rolled upwards and uses a lambda function to call the 
 		# adjustCamDist function  with the argument 1.1 #
 		
-		#########
-		
-		self.tileSelected = (0,0)
-		self.unitSelected = None
-		
-		#** Collision events ignition
-		base.cTrav = CollisionTraverser('world')
-		collisionHandler = CollisionHandlerEvent()
-		self.collisionHandler2 = CollisionHandlerQueue()
-
-		pickerNode=CollisionNode('mouse ray cnode')
-		
-		pickerNP = base.camera.attachNewNode(pickerNode)
-		
-		self.pickerRay=CollisionRay()
-		pickerNode.addSolid(self.pickerRay)
-		
-	#	base.cTrav.showCollisions(render)
-
-		# The ray tag
-		pickerNode.setTag('rays','ray1')
-		base.cTrav.addCollider(pickerNP, self.collisionHandler2)
-		
-		self.accept("mouse1", self.mouseClick1, [mainClass])
-		self.accept("mouse3", self.mouseClick2, [mainClass])
-#		self.accept("q", self.mineWall, [parserClass, modelLoaderClass, mapLoaderClass, mainClass])
-		
-		self.b1 = DirectButton(text = ("Mine wall", "click!", "rolling over", "disabled"), scale=.1, command=self.mineWall, extraArgs = [mainClass])
-		self.b1.hide()
-		
-		taskMgr.add(self.rayupdate, "blah")
-
 		taskMgr.add(self.camMoveTask,'camMoveTask') 
 		# sets the camMoveTask to be run every frame
 		
-	def rayupdate(self, task):
-		if base.mouseWatcherNode.hasMouse():
-			self.entries = []
-			for i in range(self.collisionHandler2.getNumEntries()):
-				entry = self.collisionHandler2.getEntry(i)
-				self.entries.append(entry)
-			self.entries.sort(lambda x,y: cmp(y.getSurfacePoint(render).getZ(),
-									 x.getSurfacePoint(render).getZ()))	
-									 
-			mpos=base.mouseWatcherNode.getMouse()
-			# this function will set our ray to shoot from the actual camera lenses off the 3d scene, passing by the mouse pointer position, making  magically hit what is pointed by it in the 3d space
-			self.pickerRay.setFromLens(base.camNode, mpos.getX(),mpos.getY())
-		return task.cont
-		
-	def getMousePos(self):
-		#if (len(self.entries) >= 1):
-		return Vec3(self.entries[0].getSurfacePoint(render).getX(), self.entries[0].getSurfacePoint(render).getY(), self.entries[0].getSurfacePoint(render).getZ())
-		
-	def mineWall(self, mainClass):
-		if (self.tileSelected != (0,0)):
-			mainClass.mineWall(mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]])
-			self.b1.hide()
-			self.tileSelected = (0,0)
-			
-	def mouseClick1(self, mainClass): # Selects a wall or a unit (Buildings yet to be implemented)
-		if (len(self.entries)>0):
-			
-	#		print str(self.entries[0].getIntoNodePath())
-			tempNodeName = str(self.entries[0].getIntoNodePath()) # Gets the node path of whatever is clicked on
-			if (tempNodeName[0:12] == "render/solid") or (tempNodeName[0:12] == "render/tile ") or (tempNodeName[0:12] == "render/water") or (tempNodeName[0:11] == "render/lava"): # If a tile or a solid
-				
-				if (self.unitSelected != None): # If the previous thing selected was a unit
-					#mainClass.unitHandler.gameUnits[self.unitSelected].modelNode.setScale(1)
-					mainClass.unitHandler.gameUnits[self.unitSelected].select.hide()
-					
-					if (mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.behaviorStatus('pathfollow') == 'paused'):
-						mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.resumeAi("pathfollow")
-					self.unitSelected = None
-				
-				# Gets the x and y coords of the wall from their names
-				x = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-6:len(self.entries[0].getIntoNode().getName())-4])
-				y = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-2:])
-
-				if (mainClass.mapLoaderClass.tileArray[y][x].selectable == True): # If it is selectable, then select it
-					mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
-					mainClass.mapLoaderClass.tileArray[y][x].model.setColor(0.5,1,0.5,1)
-					self.tileSelected = (x, y)
-					
-					if (mainClass.mapLoaderClass.tileArray[y][x].drillTime != None): # Show the button if it's mineable
-						self.b1.show()
-					else:
-						self.b1.hide()
-						
-					
-					
-				else: # If it is not selectable
-					self.b1.hide()
-					mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
-					self.tileSelected = (0,0)
-					
-			elif (tempNodeName[0:11] == "render/unit"): # If a unit
-				if (self.tileSelected != (0,0)):
-					mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
-					self.tileSelected = (0,0)
-					self.b1.hide()
-				
-				if (self.unitSelected != None): # If the previous thing selected was a unit
-					#mainClass.unitHandler.gameUnits[self.unitSelected].modelNode.setScale(1)
-					mainClass.unitHandler.gameUnits[self.unitSelected].select.hide()
-					
-					if (mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.behaviorStatus('pathfollow') == 'paused'):
-						mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.resumeAi("pathfollow")
-					self.unitSelected = None
-				
-				self.b1.hide()
-				self.tileSelected = (0,0)
-				
-				self.unitSelected = int(tempNodeName[12:15])
-				
-				#mainClass.unitHandler.gameUnits[self.unitSelected].modelNode.setScale(2)
-				mainClass.unitHandler.gameUnits[self.unitSelected].select.show()
-				
-				if (mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.behaviorStatus('pathfollow') != 'done'):
-					mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.pauseAi("pathfollow")
-				
-				print 'UNIT'
-					
-			else:
-				self.b1.hide()
-				self.tileSelected = (0,0)
-				
-	def mouseClick2(self, mainClass): # Deselects a wall
-		if (self.tileSelected != (0,0)):
-			mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
-			
-			self.b1.hide()
-			
-			self.tileSelected = (0,0)
-			
-		elif (self.unitSelected != None):
-			if (len(self.entries) > 0):
-			
-				mainClass.unitHandler.gameUnits[self.unitSelected].select.hide()
-				
-				tempNodeName = str(self.entries[0].getIntoNodePath())
-				if (tempNodeName[0:12] == "render/tile ") or (tempNodeName[0:12] == "render/water") or (tempNodeName[0:11] == "render/lava"): # If a tile
-					mainClass.unitHandler.moveTo((self.entries[0].getSurfacePoint(render).getX(), self.entries[0].getSurfacePoint(render).getY()), self.unitSelected)
-		
-					#mainClass.unitHandler.gameUnits[self.unitSelected].modelNode.setScale(1)
-					self.unitSelected = None
-			
 	def turnCameraAroundPoint(self, deltaX, deltaY): 
 		# This function performs two important tasks. First, it is used for the camera orbital movement that occurs when the 
 		# right mouse button is held down. It is also called with 0s for the rotation inputs to reposition the camera during the 
@@ -411,3 +269,214 @@ class CameraHandler(DirectObject.DirectObject):
 			# The old mouse positions are updated to the current mouse position as the final step. 
 		
 		return task.cont
+		
+class mouseHandler(DirectObject.DirectObject):
+	def __init__(self, mainClass):
+		base.cTrav = CollisionTraverser('world')
+	#	collisionHandler = CollisionHandlerEvent()
+		self.collisionHandler2 = CollisionHandlerQueue()
+		pickerNode=CollisionNode('mouse ray CollisionNode')
+		pickerNP = base.camera.attachNewNode(pickerNode)
+		
+		self.pickerRay=CollisionRay()
+		pickerNode.addSolid(self.pickerRay)
+		
+	#	base.cTrav.showCollisions(render)
+
+		# The ray tag
+		pickerNode.setTag('rays','ray1')
+		base.cTrav.addCollider(pickerNP, self.collisionHandler2)
+		
+		self.tileSelected = (0,0)
+		self.unitSelected = None
+		self.buildingSelected = None
+		
+		self.tempJob = None
+		
+		self.accept("mouse1", self.mouseClick1, [mainClass])
+		
+		self.accept("mouse3", self.mouseClick3, [mainClass])
+		
+		taskMgr.add(self.rayUpdate, "Mouse checking")
+		
+	def rayUpdate(self, task):
+		if base.mouseWatcherNode.hasMouse():
+			self.entries = []
+			for i in range(self.collisionHandler2.getNumEntries()):
+				entry = self.collisionHandler2.getEntry(i)
+				self.entries.append(entry)
+			self.entries.sort(lambda x,y: cmp(y.getSurfacePoint(render).getZ(),
+									 x.getSurfacePoint(render).getZ()))	
+									 
+			mpos=base.mouseWatcherNode.getMouse()
+			# this function will set our ray to shoot from the actual camera lenses off the 3d scene, passing by the mouse pointer position, making  magically hit what is pointed by it in the 3d space
+			self.pickerRay.setFromLens(base.camNode, mpos.getX(),mpos.getY())
+		return task.cont
+		
+	def selectUnit(self, unitID, mainClass):
+		self.clearSelection(mainClass)
+		self.unitSelected = unitID
+		
+		self.tempJob = mainClass.unitHandler.gameUnits[self.unitSelected].job
+		mainClass.unitHandler.gameUnits[self.unitSelected].job = "selected"
+		
+		mainClass.unitHandler.gameUnits[self.unitSelected].select.show()
+		if (mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.behaviorStatus('pathfollow') != 'done'):
+			mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.pauseAi("pathfollow")
+			
+		print 'UNIT'
+		
+	def selectWall(self, tilePos, tempNodeName, mainClass):
+		self.clearSelection(mainClass)
+		
+		if (tempNodeName[0:17] != 'render/solid roof') or (tempNodeName[0:20] != 'render/solid corner2'):
+			x = tilePos[0]
+			y = tilePos[1]
+			
+			mainClass.GUI.showWall(mainClass.mapLoaderClass.tileArray[y][x], mainClass)
+			
+			if (mainClass.mapLoaderClass.tileArray[y][x].selectable == True): # If it is selectable, then select it
+				mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+				mainClass.mapLoaderClass.tileArray[y][x].model.setColor(0.5,1,0.5,1)
+				self.tileSelected = (x, y)
+	
+	def mouseClick1(self, mainClass):
+		if (len(self.entries)>0):
+			print str(self.entries[0].getIntoNodePath())
+			tempNodeName = str(self.entries[0].getIntoNodePath()) # Gets the node path of whatever is clicked on
+			print tempNodeName, tempNodeName[len(tempNodeName)-3:len(tempNodeName)]
+			if (tempNodeName[0:12] == "render/solid") or (tempNodeName[0:12] == "render/tile ") or (tempNodeName[0:12] == "render/water") or (tempNodeName[0:11] == "render/lava"): # If a tile or a solid
+				x = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-6:len(self.entries[0].getIntoNode().getName())-4])
+				y = int(self.entries[0].getIntoNode().getName()[len(self.entries[0].getIntoNode().getName())-2:])
+				
+				self.selectWall((x,y), tempNodeName, mainClass)
+					
+			elif (tempNodeName[0:11] == "render/unit"): # If a unit
+				self.selectUnit(int(tempNodeName[12:15]), mainClass)
+				
+	#		elif (tempNodeName[0:15] == 'render/building'):
+	#			self.selectBuilding(int(tempNodeName[16:19]), mainClass)
+	
+	def mouseClick3(self, mainClass): # Deselects a wall
+		if (self.tileSelected != (0,0)):
+			self.clearSelection(mainClass)
+	#		mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+	#		
+	#		self.tileSelected = (0,0)
+			
+		elif (self.unitSelected != None):
+			if (len(self.entries) > 0):
+			
+	#			mainClass.unitHandler.gameUnits[self.unitSelected].select.hide()
+				
+				tempNodeName = str(self.entries[0].getIntoNodePath())
+				if (tempNodeName[0:12] == "render/tile ") or (tempNodeName[0:12] == "render/water") or (tempNodeName[0:11] == "render/lava"): # If a tile
+					mainClass.unitHandler.moveTo(mainClass, (self.entries[0].getSurfacePoint(render).getX(), self.entries[0].getSurfacePoint(render).getY()), self.unitSelected, userJob = True)
+					
+					mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.resumeAi("pathfollow")
+					self.clearSelection(mainClass)
+					#mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+				#	self.tileSelected = (0,0)
+				
+				else:
+					mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.removeAi("pathfollow")
+					
+					self.unitSelected = None
+	
+	def clearSelection(self, mainClass):
+	#	mainClass.GUI.hideAll()
+		if (self.tileSelected != (0,0)):
+			mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]].model.setColor(1,1,1,1)
+			self.tileSelected = (0,0)
+			
+		if (self.unitSelected != None):
+			mainClass.unitHandler.gameUnits[self.unitSelected].select.hide()
+			if (self.tempJob != None):
+				mainClass.unitHandler.gameUnits[self.unitSelected].job = self.tempJob
+				
+			if (mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.behaviorStatus('pathfollow') == 'paused'):
+				mainClass.unitHandler.gameUnits[self.unitSelected].AIBehaviors.resumeAi("pathfollow")
+				self.unitSelected = None
+				
+		if (self.buildingSelected != None):
+			mainClass.buildingHandler.buildings[self.buildingSelected].modelNode.setColor(1,1,1,1)
+			self.buildingSelected = None
+		
+	def mineWall(self, mainClass):
+		if (self.tileSelected != (0,0)):
+			pass
+		#	mainClass.mineWall(mainClass.mapLoaderClass.tileArray[self.tileSelected[1]][self.tileSelected[0]])
+		#	self.b1.hide()
+		#	self.tileSelected = (0,0)
+		
+	def getMousePos(self):
+		#if (len(self.entries) >= 1):
+		return Vec3(self.entries[0].getSurfacePoint(render).getX(), self.entries[0].getSurfacePoint(render).getY(), self.entries[0].getSurfacePoint(render).getZ())
+	
+class GUI:
+	def __init__(self, mainClass):
+		self.unitFrame = DirectFrame(frameColor = (0,0,0,0.5), frameSize = (-0.25, 0.25, -1, 1), pos = (0.8, 0, 0))
+		self.unitFrame.reparentTo(render2d)
+		self.unitFrame.hide()
+		
+		self.wallFrame = DirectFrame(frameColor = (0,0,0,0.5), frameSize = (-0.25, 0.25, -1, 1), pos = (0.8, 0, 0))
+		self.wallFrame.reparentTo(render2d)
+	#	self.wallFrame.hide()
+		
+	#	self.drillWall = DirectButton(text = ('drill wall'), scale = 0.1, command = mainClass.cameraClass.mineWall, extraArgs = [mainClass])
+	#	self.drillWall.reparentTo(self.wallFrame)
+	#	self.drillWall.setPos(0,0,0.9)
+		
+		self.drillWall = DirectButton(text = 'Hi', scale = 0.1, command = self.queueMine, extraArgs = [mainClass])
+	#	self.drillWall.reparentTo(self.wallFrame)
+		self.drillWall.setPos(0,0,0.5)
+		self.drillWall.hide()
+		
+	def hi(self):
+		print 'HIII'
+		
+	def showWall(self, wall, mainClass):
+		if (wall.selectable == True):
+			
+			self.hideUIs()
+			self.drillWall.show()
+			
+		#	if (wall.dig != None):
+		#		self.
+		
+#		uButton1 = DirectButton(text = ('need'), scale = 0.1)
+#		uButton1.reparentTo(self.unitFrame)
+#		uButton1.setPos(0,0,0.9)
+#		
+#		uButton2 = DirectButton(text = ('to'), scale = 0.1)
+#		uButton2.reparentTo(self.unitFrame)
+#		uButton2.setPos(0,0,0.7)
+#		
+#		uButton3 = DirectButton(text = ('finish'), scale = 0.1)
+#		uButton3.reparentTo(self.unitFrame)
+#		uButton3.setPos(0,0,0.5)
+#		
+#		uButton4 = DirectButton(text = ('GUI'), scale = 0.1)
+#		uButton4.reparentTo(self.unitFrame)
+#		uButton4.setPos(0,0,0.3)
+		
+		
+	
+	def unitGUI(self, mainClass, unitnumber):
+		self.hideUIs()
+		self.unitFrame.show()
+	#	if (mainClass.parserClass.unit
+	
+	def wallGUI(self, mainClass, wallPos):
+		pass
+	#	self.unitFrame.hide()
+	#	self.wallFrame.show()
+	#	if (mainClass.mapLoaderClass.tileArray[wallPos[1]][wallPos[0]].drillTime != None):
+	#		self.drillWall.show()
+	
+	def hideUIs(self):
+		self.unitFrame.hide()
+		
+	def queueMine(self, mainClass):
+	#	mainClass.cameraClass.clearSelection(mainClass)
+		mainClass.priorities.queueMine(mainClass.mouseClass.tileSelected)

@@ -1,9 +1,12 @@
 from direct.showbase.DirectObject import DirectObject
 from pandac.PandaModules import AmbientLight, DirectionalLight, VBase4, VBase3, TextNode, PointLight
+from panda3d.core import Fog
 import direct.directbase.DirectStart
 from direct.gui.OnscreenText import OnscreenText
 from direct.task.Task import Task
-from pandac.PandaModules import Point2
+from pandac.PandaModules import Point2, RigidBodyCombiner, NodePath, CollisionNode, CollisionRay, BitMask32, CollisionHandlerQueue, CollisionTraverser
+
+from direct.gui.DirectGui import DirectFrame, DirectButton
 
 from direct.interval.IntervalGlobal import *
 
@@ -13,6 +16,8 @@ import modelLoader
 import stratCam
 import unitHandler
 import astar
+import buildingHandler
+import priorities
 
 import copy
 import random
@@ -28,6 +33,8 @@ def addInstructions(pos, msg):
 
 class world(DirectObject):
 	def __init__(self):
+		base.disableMouse()
+		base.camLens.setFar(100)
 		self.parserClass = Parser.Parser() # Making the required instances
 		self.mapLoaderClass = mapLoader.mapLoader(self)
 		
@@ -38,26 +45,71 @@ class world(DirectObject):
 		self.mapY = self.mapLoaderClass.mapConfigParser.getint("map", "height") - 1
 
 		self.modelLoaderClass = modelLoader.modelLoader(self)
+		
+		
 		self.cameraClass = stratCam.CameraHandler(self)
+		self.mouseClass = stratCam.mouseHandler(self)
+		self.GUI = stratCam.GUI(self)
+	#	self.GUI = stratCam.GUI(self)
+		self.priorities = priorities.priorities()
 		
 		base.setFrameRateMeter(True)
-	
+		
+		###############
+		base.cTrav2 = CollisionTraverser('world2')
+	#	base.cTrav2.showCollisions(render)
+		
+		self.heightRay = CollisionRay() # A collision ray, used for getting the height of the terrain
+		self.heightRay.setOrigin(0,0,100)
+		self.heightRay.setDirection(0,0,-1)
+		
+		self.heightCol = CollisionNode('unit Ray')
+		self.heightCol.addSolid(self.heightRay)
+		self.heightCol.setTag('units','ray1')
+		
+		self.heightCol.setFromCollideMask(BitMask32.bit(0))
+	#	self.heightCol.setIntoCollideMask(BitMask32.allOff())
+		self.heightColNp = render.attachNewNode(self.heightCol)
+		self.heightColNp.setPos(2,2,0)
+		self.heightHandler = CollisionHandlerQueue()
+		
+		base.cTrav2.addCollider(self.heightColNp, self.heightHandler)
+		###############
+		
+	#	myFrame = DirectFrame(frameColor=(0, 0, 0, 1),
+	#					frameSize=(-0.25, 0.25, -1, 1),
+	#					pos=(1.08, 0, 0))
+	#	button = DirectButton(text = ("button"), scale = 0.1)
+	#	button.reparentTo(myFrame)
+	#	button.setPos(0, 0, 0.9)
+		
 		self.grids = astar.grid(self)
 		
 		self.unitHandler = unitHandler.world(self)
-		self.unitHandler.addUnit(0, (10,10,0), self)
-		self.unitHandler.addUnit(0, (6,10,0), self)
-		self.unitHandler.moveTo((6, 34), 0)
-		self.unitHandler.moveTo((34, 30), 1)
+	#	self.unitHandler.addUnit(0, (10,10,5), self)
+	#	self.unitHandler.addUnit(1, (6,10,5), self)
+	#	self.unitHandler.moveTo(self, (6, 34), 0)
+	#	self.unitHandler.moveTo(self, (34, 30), 1)
+		
+		
+		
+		self.buildingHandler = buildingHandler.buildingHandler(self)
 		
 		self.tileSelected = (0,0)
 		
 		taskMgr.add(self.tskCheckWalls, "Wall checking")
+		taskMgr.add(self.priorities.jobTask, "Jobs", extraArgs = [self])
 		
 		self.loadLight()
 		
 		self.accept("escape", sys.exit)
-		self.accept("space", self.unitHandler.addUnit2, extraArgs = [0, self])
+		self.accept("1", self.unitHandler.addUnit2, extraArgs = [0, self])
+		self.accept("2", self.unitHandler.addUnit2, extraArgs = [1, self])
+		self.accept("3", self.unitHandler.addUnit2, extraArgs = [2, self])
+		
+		self.accept("enter", self.buildingHandler.addBuilding2, extraArgs = [self, 0])
+		
+		self.accept("p", self.priorities.addJob)
 		
 		print 'END OF GAMEMAIN.PY!'
 		
@@ -65,7 +117,20 @@ class world(DirectObject):
 		for row in self.mapLoaderClass.tileArray:
 			for tile in row:
 				if (tile.solid == True):
-					if ((tile.solidMap[1] == True and
+					aroundNo = 0
+				#	if (tile.solidMap[1] == True):
+				#		aroundNo += 1
+				#	if (tile.solidMap[3] == True):
+				#		aroundNo += 1
+				#	if (tile.solidMap[5] == True):
+				#		aroundNo += 1
+				#	if (tile.solidMap[7] == True):
+				#		aroundNo += 1
+					for i in tile.solidMap:
+						if (i == True):
+							aroundNo += 1
+					
+					if ((tile.solidMap[1] == True and # If only supported by 1 other solid
 					tile.solidMap[3] == False and
 					tile.solidMap[5] == False and
 					tile.solidMap[7] == False) or
@@ -93,11 +158,12 @@ class world(DirectObject):
 					(tile.solidMap[1] == False and
 					tile.solidMap[3] == True and
 					tile.solidMap[5] == True and
-					tile.solidMap[7] == False) ):
+					tile.solidMap[7] == False) or#):
+					
+					(aroundNo < 3)):
 					
 					#(tile.modelName[0:13] == 'solid no work')):
 						self.mineWall(tile)
-						#self.changeTile(tile, 0, parserClass, modelLoaderClass, mapLoaderClass)
 		return Task.cont
 
 	def mineWall(self, firstTile):
@@ -131,17 +197,16 @@ class world(DirectObject):
 				if (finalTile.lava == True) or (finalTile.water == True) or (finalTile.walkable == True):
 					self.grids.airMesh[finalTile.posY/4][finalTile.posX/4] = True
 				else:
-					print 'ppppppppp'
 					self.grids.airMesh[finalTile.posY/4][finalTile.posX/4] = False
 				
 			elif (finalTileData.solid == True):
 				finalTile.solidMap[4] == True
 				
-				self.grids.landMesh[finalTile.posY][finalTile.posX] = True
-				self.grids.waterMesh[finalTile.posY][finalTile.posX] = False
-				self.grids.waterMesh[finalTile.posY][finalTile.posX] = True
+				self.grids.landMesh[finalTile.posY/4][finalTile.posX/4] = True
+				self.grids.waterMesh[finalTile.posY/4][finalTile.posX/4] = True
+				self.grids.airMesh[finalTile.posY/4][finalTile.posX/4] = True
 			
-			finalTile.model = self.modelLoaderClass.makeModel(finalTile)#, mapLoaderClass) # From here on is reparenting and positioning the tile to the right place
+			finalTile.model = self.modelLoaderClass.makeModel(finalTile, self)#, mapLoaderClass) # From here on is reparenting and positioning the tile to the right place
 
 			finalTile.model.reparentTo(render)
 			finalTile.model.setPos(finalTile.posX, finalTile.posY, 0)
@@ -150,25 +215,12 @@ class world(DirectObject):
 			tex = loader.loadTexture(finalTile.texture)
 			finalTile.model.setTexture(tex, 1)
 			
-#			if (firstTile.cror % 2 == 1):
-#				print str((firstTile.cror + 1)/2)+' energy crystals'
-#			else:
-#				print str(firstTile.cror / 2)+' ore'
-#			
 			if (firstTile.renu != 0):
 				print self.parserClass.main['objects'][firstTile.reda], firstTile.renu
 			
 				for i in range(firstTile.renu):
 					self.modelLoaderClass.addObject(self, firstTile.reda, finalTile)
-#				self.gameObjects[self.gameObjectID] = copy.copy(self.parserClass.object[self.parserClass.mainConfig.get('objects', str(firstTile.reda))])
-#				self.gameObjects[self.gameObjectID].modelNode = loader.loadModel(self.gameObjects[self.gameObjectID].model)
-#				self.gameObjects[self.gameObjectID].modelNode.setPos(firstTile.posX-2+random.randint(0,3)+random.random(), firstTile.posY-2+random.randint(0,3)+random.random(), 10)
-#				self.gameObjects[self.gameObjectID].modelNode.reparentTo(render)
-#				self.gameObjects[self.gameObjectID].modelNode.setCollideMask(BitMask32.bit(0))
 				
-				self.gameObjectID += 1
-				
-	#		print parserClass.object[parserClass.main['objects'][firstTile.reda]]
 			return finalTile
 			
 		self.mapLoaderClass.tileArray[firstTile.posY/4][firstTile.posX/4] = changer(firstTile, 0)
@@ -214,7 +266,7 @@ class world(DirectObject):
 			
 			around.model.remove()
 			
-			around.model = self.modelLoaderClass.makeModel(around)
+			around.model = self.modelLoaderClass.makeModel(around, self)
 			around.model.setCollideMask(0x01)
 			
 			around.model.reparentTo(render)
@@ -227,9 +279,9 @@ class world(DirectObject):
 		plight = AmbientLight('my plight')
 		light = self.parserClass.userConfig.getfloat('display', 'light')
 		plight.setColor(VBase4(light,light,light,0.5))
-#		plight.setColor(VBase4(0.5,0.5,0.5,0.5))
 		plnp = render.attachNewNode(plight)
 		render.setLight(plnp)
-		
+
 w = world()
+addInstructions(-0.9, "1-3 add units at the mouse click")
 run()

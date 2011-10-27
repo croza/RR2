@@ -165,7 +165,7 @@ def clipFile(file2):
 				#return endFile
 	
 def makeFile(fileData, name):
-	directory2 = directory+'converted/'
+	directory2 = directory+'/converted/maps/'
 	
 	if (not os.path.exists(directory2)):
 		os.makedirs(directory2)

@@ -12,8 +12,8 @@ class modelLoader(DirectObject):
 		self.mapY = mainClass.mapLoaderClass.mapConfigParser.getint("map", "height")
 		
 		tileNumber = 0
-		tileX = 2
-		tileY = 2
+		tileX = 0
+		tileY = 0
 		for row in mainClass.mapLoaderClass.tileArray: # Self explanitary
 			for tile in row: # For each tile in row, make a model, and position it
 				tile.posX = tileX
@@ -24,14 +24,14 @@ class modelLoader(DirectObject):
 				tile.solidMap = mapData[0]
 				tile.cornerMap = mapData[1]
 				
-				tile.model = self.makeModel(tile)
+				tile.model = self.makeModel(tile, mainClass)
 					
 				tile.model.setCollideMask(BitMask32.bit(0))
 					
 				tile.model.reparentTo(render)
 				tile.model.setPos(tile.posX,tile.posY,0)#tile.posZ)
 				
-#				tile.model.flattenStrong()
+				tile.model.flattenStrong()
 				
 				tex=loader.loadTexture(tile.texture)
 				tile.model.setTexture(tex, 1)
@@ -39,15 +39,31 @@ class modelLoader(DirectObject):
 				tileX += 4
 				tileNumber += 1
 				
-			tileX = 2
+			tileX = 0
 			tileY += 4
 			
 	def addObject(self, mainClass, objectID, tile):
+		position = (tile.posX-2+random.randint(0,3)+random.random(), tile.posY-2+random.randint(0,3)+random.random(), 10)
 		mainClass.gameObjects[mainClass.gameObjectID] = copy.copy(mainClass.parserClass.object[mainClass.parserClass.mainConfig.get('objects', str(objectID))])
 		mainClass.gameObjects[mainClass.gameObjectID].modelNode = loader.loadModel(mainClass.gameObjects[mainClass.gameObjectID].model)
-		mainClass.gameObjects[mainClass.gameObjectID].modelNode.setPos(tile.posX-2+random.randint(0,3)+random.random(), tile.posY-2+random.randint(0,3)+random.random(), 10)
+		mainClass.gameObjects[mainClass.gameObjectID].modelNode.setPos(position)
 		mainClass.gameObjects[mainClass.gameObjectID].modelNode.reparentTo(render)
-		mainClass.gameObjects[mainClass.gameObjectID].modelNode.setCollideMask(BitMask32.bit(0))
+		mainClass.gameObjects[mainClass.gameObjectID].modelNode.setCollideMask(BitMask32.bit(1))
+		
+		mainClass.heightColNp.setPos(position[0], position[1], 100)
+	
+		base.cTrav2.traverse(render)
+		
+		entries = []
+		for i in range(mainClass.heightHandler.getNumEntries()):
+			entry = mainClass.heightHandler.getEntry(i)
+			entries.append(entry)
+		entries.sort(lambda x,y: cmp(y.getSurfacePoint(render).getZ(),
+									 x.getSurfacePoint(render).getZ()))	
+		
+		if (len(entries)>0):
+			mainClass.gameObjects[mainClass.gameObjectID].modelNode.setZ(entries[0].getSurfacePoint(render).getZ())
+
 		mainClass.gameObjectID += 1
 		
 	def reloadSurroundings(self, mainClass, tileChanged):
@@ -174,7 +190,7 @@ class modelLoader(DirectObject):
 		
 		return (surroundMap, cornerMap)
 			
-	def makeModel(self, tileData): # The function to make a model
+	def makeModel(self, tileData, mainClass): # The function to make a model
 		def makeTile(tileData):
 			x = tileData.posX/4
 			y = tileData.posY/4
@@ -227,7 +243,7 @@ class modelLoader(DirectObject):
 			
 			return NodePath(node) 
 			
-		def makeSolid(tileData):
+		def makeSolid(tileData, mainClass):
 			def makeFlat(v0, v1, v2, v3):
 				vertices3.addData3f(v0) # UBL
 				texcoord3.addData2f(0, 0)
@@ -446,9 +462,32 @@ class modelLoader(DirectObject):
 				makeOtherCorner(vertex7, vertex7, vertex1, vertex2, vertex2, vertex5)
 				tileData.modelName = 'solid corner2 south, east '+str(x).zfill(2)+', '+str(y).zfill(2)
 			
+			elif (tileData.solidMap[0] == True and # An odd bridge thing...
+			tileData.solidMap[1] == True and
+			tileData.solidMap[2] == False and
+			tileData.solidMap[3] == True and
+			tileData.solidMap[5] == True and
+			tileData.solidMap[6] == False and
+			tileData.solidMap[7] == True and
+			tileData.solidMap[8] == True):
+				makeFlat(vertex6, vertex1, vertex2, vertex5)
+				tileData.modelName = 'solid bridge at '+str(x).zfill(2)+', '+str(y).zfill(2)
+				
+			elif (tileData.solidMap[0] == False and # An odd bridge thing...
+			tileData.solidMap[1] == True and
+			tileData.solidMap[2] == True and
+			tileData.solidMap[3] == True and
+			tileData.solidMap[5] == True and
+			tileData.solidMap[6] == True and
+			tileData.solidMap[7] == True and
+			tileData.solidMap[8] == False):
+				makeFlat(vertex0, vertex3, vertex4, vertex7)
+				tileData.modelName = 'solid bridge at '+str(x).zfill(2)+', '+str(y).zfill(2)
+			
 			else:
 				makeFlat(vertex0, vertex2, vertex4, vertex6)
 				tileData.modelName = 'solid no work '+str(x).zfill(2)+', '+str(y).zfill(2)
+				#mainClass.mineWall(tileData)
 				
 			geom = Geom(data) 
 			try:
@@ -461,7 +500,7 @@ class modelLoader(DirectObject):
 			return NodePath(node)
 			
 		if (tileData.solid == True):
-			model = makeSolid(tileData)
+			model = makeSolid(tileData, mainClass)
 		else:
 			model = makeTile(tileData)
 		
